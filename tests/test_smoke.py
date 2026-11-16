@@ -130,6 +130,18 @@ class MiyoraTests(unittest.TestCase):
         with urlopen(self.base + "/favicon.ico") as response:
             self.assertEqual(response.status, 200)
 
+    def test_knowledge_window_markup(self):
+        with urlopen(self.base + "/") as response:
+            page = response.read().decode("utf-8")
+        self.assertIn('id="kb-open"', page)
+        self.assertIn('id="kb-layer"', page)
+        self.assertIn('role="dialog"', page)
+        self.assertIn('aria-modal="true"', page)
+        self.assertIn('id="kb-handle"', page)
+        self.assertIn('resize:both', page)
+        self.assertIn("setPointerCapture", page)
+        self.assertIn("max-width:100vw", page)
+
     def test_homepage(self):
         with urlopen(self.base + "/") as response:
             self.assertIn(b"Miyora", response.read())
