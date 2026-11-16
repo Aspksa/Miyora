@@ -4,115 +4,34 @@ chcp 65001 >nul 2>&1
 title Miyora Launcher
 pushd "%~dp0"
 if errorlevel 1 goto :folder_error
+
 echo ===================================
 echo           Miyora Launcher
 echo ===================================
 echo.
 echo [INFO] Project folder: "%CD%"
-
-if exist "main.py" goto :check_files
-for /d %%D in (*) do (
-  if exist "%%~fD\main.py" (
-    pushd "%%~fD"
-    goto :check_files
-  )
-)
-echo [ERROR] main.py not found. Download the entire repository.
-goto :failed
-
-:check_files
-if not exist "database.py" (
-  echo [ERROR] database.py is missing.
+if not exist "launcher.ps1" (
+  echo [ERROR] launcher.ps1 is missing. Download the complete Miyora repository.
   goto :failed
 )
-if not exist "index.html" (
-  echo [ERROR] index.html is missing.
+where powershell.exe >nul 2>&1
+if errorlevel 1 (
+  echo [ERROR] Windows PowerShell is required.
   goto :failed
 )
-:locate_python
-set "PYTHON_EXE="
-rem Prefer actual executables. The Windows py launcher may have stale registry entries.
-for /f "delims=" %%P in ('where python.exe 2^>nul') do (
-  if not defined PYTHON_EXE call :probe "%%~fP"
-)
-rem The Python launcher can list multiple installations; verify each actual exe.
-if not defined PYTHON_EXE (
-  where py.exe >nul 2>&1
-  if not errorlevel 1 (
-    for /f "usebackq tokens=1,*" %%A in (`py -0p 2^>nul`) do (
-      if not defined PYTHON_EXE call :probe "%%B"
-    )
-  )
-)
-rem Also check commonly installed per-user Python locations on any Windows drive.
-if not defined PYTHON_EXE (
-  for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python3*") do (
-    if not defined PYTHON_EXE call :probe "%%~fD\python.exe"
-  )
-)
-if not defined PYTHON_EXE (
-  for /d %%D in ("%ProgramFiles%\Python3*") do (
-    if not defined PYTHON_EXE call :probe "%%~fD\python.exe"
-  )
-)
-if not defined PYTHON_EXE (
-  for /d %%D in ("%ProgramFiles(x86)%\Python3*") do (
-    if not defined PYTHON_EXE call :probe "%%~fD\python.exe"
-  )
-)
-if defined PYTHON_EXE goto :launch
-echo [WARN] No working Python interpreter found.
-where winget.exe >nul 2>&1
-if errorlevel 1 goto :no_python
-echo [INFO] Installing Python 3.13 via winget...
-winget install --id Python.Python.3.13 --exact --source winget --accept-package-agreements --accept-source-agreements
-if errorlevel 1 goto :no_python
-rem Recheck the executable directly; PATH may not be refreshed yet.
-for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python313*") do (
-  if not defined PYTHON_EXE call :probe "%%~fD\python.exe"
-)
-if not defined PYTHON_EXE (
-  echo [INFO] Python installed. Close and reopen this launcher.
-  goto :failed
-)
-goto :launch
-
-:probe
-if not exist "%~1" exit /b 0
-"%~1" -c "import sys; assert sys.version_info >= (3, 9); print(sys.executable)" >nul 2>&1
-if not errorlevel 1 set "PYTHON_EXE=%~1"
-exit /b 0
-
-:launch
-echo [INFO] Python: "%PYTHON_EXE%"
-"%PYTHON_EXE%" --version
-set "PORT=0"
-set "HOST=127.0.0.1"
-echo [INFO] Starting Miyora...
-echo [INFO] Keep this window open. Stop with Ctrl+C.
-echo.
-"%PYTHON_EXE%" -u "main.py"
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0launcher.ps1" %*
 set "MIYORA_EXIT=%ERRORLEVEL%"
+if "%MIYORA_EXIT%"=="0" (
+  popd
+  exit /b 0
+)
 echo.
-echo [ERROR] Miyora stopped with exit code %MIYORA_EXIT%.
-goto :failed
-
-:no_python
-echo [ERROR] Python unavailable. Install Python from https://www.python.org/downloads/windows/
+echo [ERROR] Miyora failed. See launcher-diagnostic.txt.
 goto :failed
 
 :folder_error
-echo [ERROR] Cannot open the project directory.
+echo [ERROR] Cannot access launcher directory.
 :failed
-echo.
-echo [INFO] Writing diagnostics to launcher-diagnostic.txt
-> "%~dp0launcher-diagnostic.txt" echo Miyora launcher diagnostics
->> "%~dp0launcher-diagnostic.txt" echo Project: %CD%
->> "%~dp0launcher-diagnostic.txt" echo Python selected: "%PYTHON_EXE%"
->> "%~dp0launcher-diagnostic.txt" echo Python candidates:
-where python.exe >> "%~dp0launcher-diagnostic.txt" 2>&1
->> "%~dp0launcher-diagnostic.txt" echo Python launcher versions:
-py -0p >> "%~dp0launcher-diagnostic.txt" 2>&1
 echo.
 echo [INFO] Press any key to close this window.
 pause
