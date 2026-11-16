@@ -174,6 +174,18 @@ class MiyoraHandler(BaseHTTPRequestHandler):
                 self.send_json(200, cloudru.models())
             except cloudru.CloudError as exc:
                 self.send_json(400, {"error": str(exc)})
+        elif route.startswith("/api/chats/") and route.endswith("/graph"):
+            try:
+                parts = route.strip("/").split("/")
+                if len(parts) != 4 or parts[0:2] != ["api", "chats"] or parts[3] != "graph":
+                    raise ValueError("invalid_route")
+                thread_id = int(parts[2])
+                chat_store.initialize()
+                result = chat_store.graph(thread_id)
+                self.send_json(200 if result is not None else 404,
+                               result if result is not None else {"error": "not_found"})
+            except (ValueError, sqlite3.Error):
+                self.send_json(400, {"error": "invalid_chat"})
         elif route == "/api/chats" or route.startswith("/api/chats/"):
             try:
                 chat_store.initialize()
