@@ -462,6 +462,27 @@ class MiyoraTests(unittest.TestCase):
                        '@media(max-width:690px)'):
             self.assertIn(marker, html)
 
+    def test_neural_visualization_modes(self):
+        from app.core import chat_store
+        chat_store.initialize()
+        tid = chat_store.create_thread("Modes")["id"]
+        chat_store.append(tid, "user", "inspectable " + "x" * 4500)
+        result = chat_store.graph(tid)
+        self.assertEqual(len(result["nodes"]), 1)
+        self.assertEqual(len(result["nodes"][0]["content"]), 4000)
+        self.assertTrue(result["nodes"][0]["content"].startswith("inspectable"))
+        with urlopen(self.base + "/") as response:
+            html = response.read().decode("utf-8")
+        for marker in ('data-neural-mode="radial"', 'data-neural-mode="links"',
+                       'data-neural-mode="hex"', 'data-neural-mode="overview"',
+                       'id="neural-inspector"', 'id="neural-inspector-open"',
+                       "function hexagon(", "function zoomAt(",
+                       "prefers-reduced-motion: reduce", "stage:'подготовка'",
+                       "stage:'запрос'", "stage:'ответ'",
+                       "aria-pressed", "miyora:focus-message"):
+            self.assertIn(marker, html)
+        self.assertTrue(chat_store.delete(tid))
+
     def test_streaming_provider(self):
         from app.core import cloudru,chat
         cloudru.save_key("test-stream-key")
