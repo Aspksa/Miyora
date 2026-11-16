@@ -274,8 +274,10 @@ class MiyoraTests(unittest.TestCase):
         self.assertEqual(saved["model"], "ai-sage/GigaChat3-10B-A1.8B")
         self.assertNotIn(secret, json.dumps(saved))
         self.assertEqual(cloudru._read_key(), secret)
-        with self.assertRaises(HTTPError) as error:
-            urlopen(self.base + "/api/settings/cloudru/models")
+        from urllib.error import HTTPError as UpstreamHTTPError
+        with patch.object(cloudru, "urlopen", side_effect=UpstreamHTTPError(cloudru.BASE_URL, 401, "unauthorized", {}, None)):
+            with self.assertRaises(HTTPError) as error:
+                urlopen(self.base + "/api/settings/cloudru/models")
         self.assertEqual(error.exception.code, 400)
         request = Request(self.base + "/api/settings/cloudru", data=b'{"clear_key":true}',
                           headers={"Content-Type": "application/json"}, method="POST")
