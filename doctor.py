@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import importlib
+from contextlib import closing
 import json
 import os
 from pathlib import Path
@@ -23,9 +24,10 @@ def run() -> int:
             checks["import:" + name] = str(exc)
     try:
         with tempfile.TemporaryDirectory(prefix="miyora-doctor-") as tmp:
-            with sqlite3.connect(str(Path(tmp) / "test.db")) as db:
-                db.execute("CREATE TABLE checkup (value TEXT)")
-                db.execute("INSERT INTO checkup VALUES (?)", ("Привет",))
+            with closing(sqlite3.connect(str(Path(tmp) / "test.db"))) as db:
+                with db:
+                    db.execute("CREATE TABLE checkup (value TEXT)")
+                    db.execute("INSERT INTO checkup VALUES (?)", ("Привет",))
                 checks["sqlite:write_read"] = db.execute("SELECT value FROM checkup").fetchone()[0] == "Привет"
     except Exception as exc:
         checks["sqlite:write_read"] = str(exc)
