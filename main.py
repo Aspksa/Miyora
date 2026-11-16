@@ -9,6 +9,10 @@ import os
 import socket
 import sys
 import webbrowser
+import logging
+import threading
+import time
+from urllib.request import urlopen
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -20,6 +24,34 @@ ROOT = Path(__file__).resolve().parent
 HOST = "127.0.0.1"
 
 PAGE_PATH = ROOT / "index.html"
+LOG_PATH = ROOT / "data" / "miyora.log"
+
+def configure_logging() -> None:
+    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(filename=str(LOG_PATH), level=logging.INFO, encoding="utf-8",
+                        format="%(asctime)s %(levelname)s %(message)s")
+
+def verify_and_open(url: str) -> None:
+    for _ in range(30):
+        try:
+            with urlopen(url + "api/health", timeout=1.5) as response:
+                if response.status == 200 and json.load(response).get("status") == "ok":
+                    logging.info("HTTP health check passed: %s", url)
+                    print("[INFO] HTTP health check passed.", flush=True)
+                    for _ in range(2):
+                        try:
+                            if webbrowser.open(url, new=2):
+                                return
+                        except Exception:
+                            logging.exception("Browser launch failed")
+                        time.sleep(1)
+                    print("[WARN] Open manually: " + url, flush=True)
+                    logging.warning("Could not open browser: %s", url)
+                    return
+        except Exception:
+            time.sleep(0.3)
+    print("[ERROR] HTTP health check failed: " + url, flush=True)
+    logging.error("HTTP health check failed: %s", url)
 
 
 class MiyoraHandler(BaseHTTPRequestHandler):
@@ -115,6 +147,7 @@ def main() -> int:
         return 2
 
     try:
+        configure_logging()
         database.initialize()
         with ThreadingHTTPServer((HOST, port), MiyoraHandler) as server:
             server.daemon_threads = True
@@ -123,16 +156,24 @@ def main() -> int:
             print(f"[INFO] Project: {ROOT}", flush=True)
             print(f"[INFO] Open: http://{HOST}:{actual_port}/", flush=True)
             print("[INFO] Stop: Ctrl+C", flush=True)
-            webbrowser.open(f"http://{HOST}:{actual_port}/")
+            url = f"http://{HOST}:{actual_port}/"
+            logging.info("Server started: %s", url)
+            threading.Thread(target=verify_and_open, args=(url,), daemon=True).start()
             try:
                 server.serve_forever(poll_interval=0.3)
             except KeyboardInterrupt:
                 print("\n[INFO] Miyora stopped.", flush=True)
         return 0
     except (OSError, sqlite3.Error) as exc:
+        logging.exception("Startup failed")
         print(f"[ERROR] Could not start local server: {exc}", file=sys.stderr)
         return 1
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except Exception:
+        configure_logging()
+        logging.exception("Unhandled error")
+        raise
