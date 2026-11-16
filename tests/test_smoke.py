@@ -483,6 +483,32 @@ class MiyoraTests(unittest.TestCase):
             self.assertIn(marker, html)
         self.assertTrue(chat_store.delete(tid))
 
+    def test_neural_knowledge_clusters_and_links(self):
+        from app.core import chat_store
+        chat_store.initialize()
+        tid = chat_store.create_thread("Knowledge graph")["id"]
+        try:
+            chat_store.append(tid, "user", "sqlite graph visual connections")
+            chat_store.append(tid, "assistant", "sqlite graph persistence connections")
+            chat_store.append(tid, "user", "unrelated weather forecast")
+            graph = chat_store.graph(tid)
+            self.assertEqual(graph["relation_method"], "chronology_and_shared_lexical_terms")
+            self.assertEqual(len(graph["clusters"]), 2)
+            self.assertEqual(len(graph["nodes"]), 3)
+            self.assertEqual(len([e for e in graph["edges"] if e["type"] == "sequence"]), 2)
+            lexical = [e for e in graph["edges"] if e["type"] == "shared_terms"]
+            self.assertTrue(lexical)
+            self.assertIn("sqlite", lexical[0]["terms"])
+            self.assertIn("graph", lexical[0]["terms"])
+            self.assertEqual(sum(len(group["node_ids"]) for group in graph["clusters"]), 3)
+            with urlopen(self.base + "/") as response:
+                html = response.read().decode("utf-8")
+            for marker in ("Hierarchical rings", "graph.clusters", "transition={from:before",
+                           "shared_terms", "stage:'синхронизация'"):
+                self.assertIn(marker, html)
+        finally:
+            chat_store.delete(tid)
+
     def test_streaming_provider(self):
         from app.core import cloudru,chat
         cloudru.save_key("test-stream-key")

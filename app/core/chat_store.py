@@ -1,6 +1,8 @@
 """Persist conversations and messages in SQLite."""
 from __future__ import annotations
 from contextlib import closing
+import re
+from collections import defaultdict
 from app.core import database
 
 def initialize():
@@ -79,5 +81,40 @@ def graph(thread_id: int, limit: int = 160) -> dict | None:
          "type": "sequence"}
         for i in range(1, len(nodes))
     ]
+    # Transparent lexical connections, not model-inferred knowledge or hidden reasoning.
+    stopwords = {"это", "как", "что", "для", "или", "при", "the", "and", "with", "from", "you", "are", "мне", "могу", "нужно", "будет", "есть", "привет"}
+    def terms(content):
+        return {term for term in re.findall(r"[^\W_]{4,}", content.lower(), re.UNICODE)
+                if term not in stopwords}
+    groups = defaultdict(list)
+    for node in nodes:
+        node_terms = terms(node["content"])
+        node["terms"] = sorted(node_terms)[:12]
+        for term in node_terms:
+            groups[term].append(node["id"])
+    shared = []
+    # Cap pair generation to avoid quadratic expansion for frequent words.
+    for term, members in sorted(groups.items()):
+        if 2 <= len(members) <= 16:
+            shared.append((term, members))
+    pair_terms = defaultdict(list)
+    for term, members in shared:
+        for i, source in enumerate(members):
+            for target in members[i + 1:]:
+                if len(pair_terms[(source, target)]) < 4:
+                    pair_terms[(source, target)].append(term)
+    knowledge_edges = [
+        {"source": source, "target": target, "type": "shared_terms",
+         "terms": matches}
+        for (source, target), matches in pair_terms.items() if len(matches) >= 2
+    ][:240]
+    clusters = [
+        {"id": "role-user", "label": "Сообщения пользователя",
+         "kind": "role", "node_ids": [n["id"] for n in nodes if n["role"] == "user"]},
+        {"id": "role-assistant", "label": "Ответы Miyora",
+         "kind": "role", "node_ids": [n["id"] for n in nodes if n["role"] == "assistant"]},
+    ]
     return {"thread_id": thread["id"], "title": thread["title"],
-            "nodes": nodes, "edges": edges, "source": "sqlite_messages"}
+            "nodes": nodes, "edges": edges + knowledge_edges,
+            "clusters": clusters, "source": "sqlite_messages",
+            "relation_method": "chronology_and_shared_lexical_terms"}
