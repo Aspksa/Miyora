@@ -440,6 +440,7 @@ header .right .home-status-dot{margin-left:2px}
 .mz-floating-panel button{background:var(--mz-surface);border:1px solid var(--mz-border);color:var(--mz-text);border-radius:8px;padding:8px 10px;cursor:pointer}
 .mz-floating-panel .mz-help{color:var(--mz-muted);font-size:10px;line-height:1.5}
 @media(prefers-reduced-motion:reduce){.mz-floating-panel{transition:none}}
+.mz-floating-panel input[type=search],.mz-floating-panel select{display:block;box-sizing:border-box;width:100%;margin-top:5px;background:var(--mz-surface);border:1px solid var(--mz-border);border-radius:8px;color:var(--mz-text);padding:8px}.mz-floating-panel input[type=checkbox]{accent-color:var(--mz-accent)}
 </style>
 </head>
 <body>
@@ -454,7 +455,7 @@ header .right .home-status-dot{margin-left:2px}
 <main class="chat-layout" id="chat-app">
   <section class="neural-panel" data-mz-theme="dark" aria-label="Граф связей диалога">
     <div class="neural-header"><div><span class="neural-eyebrow">MIYORA / NEURAL WORKSPACE</span><h2>Карта диалога</h2><p>Сообщения и связи из SQLite</p></div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><label for="neural-theme" class="neural-eyebrow">ТЕМА</label><select class="neural-theme-picker" id="neural-theme" aria-label="Тема графа"><option value="dark">Тёмная</option><option value="gold">Золото</option><option value="amber">Янтарь</option><option value="jade">Нефрит</option></select><span class="neural-live" id="neural-status">ОЖИДАНИЕ</span></div></div>
-    <div class="neural-modebar" role="group" aria-label="Режим визуализации"><button type="button" class="neural-mode active" data-neural-mode="radial" aria-pressed="true">Ядро</button><button type="button" class="neural-mode" data-neural-mode="links" aria-pressed="false">Связи</button><button type="button" class="neural-mode" data-neural-mode="hex" aria-pressed="false">Карта</button><button type="button" class="neural-mode" data-neural-mode="overview" aria-pressed="false">Обзор</button><button type="button" class="neural-mode" data-neural-mode="circle" aria-pressed="false">Круг</button><button type="button" class="neural-mode" data-neural-mode="board" aria-pressed="false">Плата</button><button type="button" class="neural-mode" data-neural-mode="hud" aria-pressed="false">HUD</button></div><div class="neural-canvas-wrap" id="neural-viewport"><canvas id="neural-canvas" aria-label="Интерактивный граф сообщений" role="img"></canvas><button type="button" class="mz-float-toggle" id="mz-panel-toggle" aria-controls="mz-floating-panel" aria-expanded="false">⚙ Панель</button><aside class="mz-floating-panel" id="mz-floating-panel" aria-label="Управление графом" hidden><h3>Управление визуализацией</h3><label>Скорость движения камеры <output id="mz-camera-value">0.14</output><input type="range" id="mz-camera-speed" min="0.05" max="0.4" step="0.01" value="0.14"></label><label><input type="checkbox" id="mz-signals" checked> Подсветка связей и сигналов</label><button type="button" id="mz-center">В центр</button><p class="mz-help">Колесо — масштаб · перетаскивание — перемещение · нажатие на узел — открыть сообщение</p></aside><div class="neural-empty" id="neural-empty">Начните диалог или выберите чат, чтобы увидеть граф сообщений.</div><div class="neural-controls"><button type="button" id="neural-zoom-in" title="Приблизить" aria-label="Приблизить граф">+</button><button type="button" id="neural-zoom-out" title="Отдалить" aria-label="Отдалить граф">−</button><button type="button" id="neural-reset" title="Сбросить вид" aria-label="Сбросить вид">⌖</button></div></div>
+    <div class="neural-modebar" role="group" aria-label="Режим визуализации"><button type="button" class="neural-mode active" data-neural-mode="radial" aria-pressed="true">Ядро</button><button type="button" class="neural-mode" data-neural-mode="links" aria-pressed="false">Связи</button><button type="button" class="neural-mode" data-neural-mode="hex" aria-pressed="false">Карта</button><button type="button" class="neural-mode" data-neural-mode="overview" aria-pressed="false">Обзор</button><button type="button" class="neural-mode" data-neural-mode="circle" aria-pressed="false">Круг</button><button type="button" class="neural-mode" data-neural-mode="board" aria-pressed="false">Плата</button><button type="button" class="neural-mode" data-neural-mode="hud" aria-pressed="false">HUD</button></div><div class="neural-canvas-wrap" id="neural-viewport"><canvas id="neural-canvas" aria-label="Интерактивный граф сообщений" role="img"></canvas><button type="button" class="mz-float-toggle" id="mz-panel-toggle" aria-controls="mz-floating-panel" aria-expanded="false">⚙ Панель</button><aside class="mz-floating-panel" id="mz-floating-panel" aria-label="Управление графом" hidden><h3>Управление визуализацией</h3><label>Поиск сообщений и тем<input id="mz-graph-search" type="search" placeholder="Найти сообщение…" autocomplete="off"></label><div id="mz-search-count" class="mz-help" aria-live="polite"></div><label><input type="checkbox" id="mz-physics" checked> Пружинное движение узлов</label><label>Контекст разговора <select id="mz-context-filter"><option value="all">Все сообщения</option><option value="recent">Последние сообщения (не подтверждённый контекст)</option></select></label><p class="mz-help" id="mz-context-note">Точный состав контекста модели недоступен: показаны сообщения диалога.</p><label>Скорость движения камеры <output id="mz-camera-value">0.14</output><input type="range" id="mz-camera-speed" min="0.05" max="0.4" step="0.01" value="0.14"></label><label><input type="checkbox" id="mz-signals" checked> Подсветка связей и сигналов</label><button type="button" id="mz-center">В центр</button><p class="mz-help">Колесо — масштаб · перетаскивание — перемещение · нажатие на узел — открыть сообщение</p></aside><div class="neural-empty" id="neural-empty">Начните диалог или выберите чат, чтобы увидеть граф сообщений.</div><div class="neural-controls"><button type="button" id="neural-zoom-in" title="Приблизить" aria-label="Приблизить граф">+</button><button type="button" id="neural-zoom-out" title="Отдалить" aria-label="Отдалить граф">−</button><button type="button" id="neural-reset" title="Сбросить вид" aria-label="Сбросить вид">⌖</button></div></div>
     <div class="neural-bottom"><div class="neural-stats"><span id="neural-node-count">0 УЗЛОВ</span><span id="neural-edge-count">0 СВЯЗЕЙ</span><span>КОЛЕСО — МАСШТАБ · ПЕРЕТАСКИВАНИЕ — ОБЗОР</span></div><div class="neural-selected" id="neural-selected" aria-live="polite">Выберите узел, чтобы перейти к сообщению</div><div class="neural-inspector" id="neural-inspector" hidden><div id="neural-inspector-meta"></div><div id="neural-inspector-text"></div><button type="button" id="neural-inspector-open">Перейти к сообщению</button></div><div class="neural-node-list" id="neural-node-list" aria-label="Доступный список узлов графа"></div></div>
   </section>
   <aside class="chat-sidebar" id="chat-sidebar" aria-label="Навигация чата">
@@ -1054,12 +1055,35 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  let graph={nodes:[],edges:[]},positions=[],threadId=null,requestVersion=0;
  let zoom=1,panX=0,panY=0,width=1,height=1,dpr=1,selected=null,active=false,raf=0;
  let pointer=null,dragged=false,clock=0,mode='radial',activityStage='idle',lastRefresh=0,transition=null,hovered=null,rotation=0;
+ let searchQuery='',searchMatches=new Set(),contextFilter='all',physicsEnabled=true,physicsMoving=false,lastTick=0;
  let targetCamera={zoom:1,panX:0,panY:0},cameraSpeed=.14,signalsEnabled=true,signalPulse=0;
  const floating=$('mz-floating-panel'),floatingToggle=$('mz-panel-toggle');
  floatingToggle.addEventListener('click',()=>{floating.hidden=!floating.hidden;floatingToggle.setAttribute('aria-expanded',String(!floating.hidden))});
  $('mz-camera-speed').addEventListener('input',e=>{cameraSpeed=Number(e.target.value);$('mz-camera-value').textContent=cameraSpeed.toFixed(2)});
  $('mz-signals').addEventListener('change',e=>{signalsEnabled=e.target.checked;schedule()});
  $('mz-center').addEventListener('click',()=>fit());
+ $('mz-physics').addEventListener('change',e=>{physicsEnabled=e.target.checked;if(!physicsEnabled){for(const p of positions){p.x=p.tx;p.y=p.ty;p.vx=0;p.vy=0}physicsMoving=false}schedule()});
+ $('mz-context-filter').addEventListener('change',e=>{contextFilter=e.target.value;schedule()});
+ $('mz-graph-search').addEventListener('input',e=>{searchQuery=e.target.value.trim().toLocaleLowerCase();updateSearch()});
+ $('mz-graph-search').addEventListener('keydown',e=>{if(e.key==='Enter'){const match=positions.find(p=>searchMatches.has(p.id));if(match){e.preventDefault();focusNode(match)}}});
+ function contextNodes(){return new Set((contextFilter==='recent'?graph.nodes.slice(-Math.min(12,graph.nodes.length)):graph.nodes).map(n=>n.id))}
+ function updateSearch(){
+  searchMatches=new Set();
+  if(searchQuery){for(const n of graph.nodes)if((n.content||n.label||'').toLocaleLowerCase().includes(searchQuery))searchMatches.add(n.id);
+   for(const edge of graph.edges)if(searchMatches.has(edge.source)||searchMatches.has(edge.target)){searchMatches.add(edge.source);searchMatches.add(edge.target)}
+  }
+  $('mz-search-count').textContent=searchQuery?searchMatches.size+' узлов с прямыми связями':'';
+  const first=positions.find(p=>searchMatches.has(p.id));if(first&&searchQuery)focusNode(first);else schedule();
+ }
+ function focusNode(p){targetCamera.zoom=Math.max(1.05,targetCamera.zoom);targetCamera.panX=-p.x*targetCamera.zoom;targetCamera.panY=-p.y*targetCamera.zoom;schedule()}
+ function neighborhood(id){const ids=new Set([id]);for(const edge of graph.edges){if(edge.source===id)ids.add(edge.target);if(edge.target===id)ids.add(edge.source)}return ids}
+ function springStep(dt){
+  if(!physicsEnabled||reduced||transition){physicsMoving=false;return}
+  const k=Math.min(.05,dt),stiffness=24,damping=Math.exp(-8*k);let moving=false;
+  for(const p of positions){const ax=(p.tx-p.x)*stiffness,ay=(p.ty-p.y)*stiffness;p.vx=(p.vx+ax*k)*damping;p.vy=(p.vy+ay*k)*damping;p.x+=p.vx*k;p.y+=p.vy*k;if(Math.hypot(p.tx-p.x,p.ty-p.y)>.15||Math.hypot(p.vx,p.vy)>.15)moving=true;else{p.x=p.tx;p.y=p.ty;p.vx=0;p.vy=0}}
+  physicsMoving=moving;
+ }
+
  const colors={user:'#6dcfc4',assistant:'#d6aa7b'};
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  // Hierarchical rings: adapted from Aspksa/Mizuyori mizuyori/static/brain.js: weighted ring sectors,
@@ -1154,7 +1178,9 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
     locations.set(node.id,{x:Math.cos(a)*r,y:Math.sin(a)*r});
    });
   }
-  positions=graph.nodes.map(node=>({id:node.id,...(locations.get(node.id)||{x:0,y:0}),node}));
+  const oldPositions=new Map(positions.map(p=>[p.id,p]));
+  positions=graph.nodes.map(node=>{const target=locations.get(node.id)||{x:0,y:0},old=oldPositions.get(node.id);return {id:node.id,x:old?.x??target.x,y:old?.y??target.y,tx:target.x,ty:target.y,vx:old?.vx||0,vy:old?.vy||0,node}});
+  physicsMoving=physicsEnabled&&!reduced&&positions.some(p=>Math.hypot(p.x-p.tx,p.y-p.ty)>.15);
   graph._sections=parts;
  }
  function hexagon(x,y,r,fill,stroke){
@@ -1203,15 +1229,22 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
    if(!reduced){const a=clock*.0004;ctx.beginPath();ctx.moveTo(center.x,center.y);ctx.lineTo(center.x+Math.cos(a)*Math.min(width,height)*.45,center.y+Math.sin(a)*Math.min(width,height)*.45);ctx.strokeStyle='#67c5b866';ctx.stroke()}
   }
   const lookup=new Map(positions.map(p=>[p.id,p]));
+  const focused=hovered?.id??null,neighbors=focused!==null?neighborhood(focused):null,context=contextNodes(),filtering=!!searchQuery||contextFilter==='recent';
+  const visibleNode=id=>context.has(id)&&(!searchQuery||searchMatches.has(id));
+  const faded=id=>(neighbors&&!neighbors.has(id))||(filtering&&!visibleNode(id));
+  const aggregate=zoom<.48&&!searchQuery&&!focused;
+  if(aggregate){for(const section of graph._sections||[]){const members=section.nodes.map(n=>lookup.get(n.id)).filter(Boolean);if(!members.length)continue;const x=members.reduce((a,p)=>a+p.x,0)/members.length,y=members.reduce((a,p)=>a+p.y,0)/members.length,s=screen({x,y});ctx.beginPath();ctx.arc(s.x,s.y,Math.max(11,15+Math.sqrt(members.length)*2),0,Math.PI*2);ctx.fillStyle=section.color+'55';ctx.fill();ctx.strokeStyle=section.color;ctx.stroke();ctx.fillStyle='#d9eae4';ctx.textAlign='center';ctx.font='11px system-ui';ctx.fillText(section.label+' · '+members.length,s.x,s.y+4)}}
   if(mode==='links'||mode==='overview'){
    ctx.lineWidth=1;ctx.strokeStyle='#327c7a55';
    for(const p of positions){const s=screen(p);ctx.beginPath();ctx.moveTo(center.x,center.y);ctx.lineTo(s.x,s.y);ctx.stroke()}
   }
   ctx.strokeStyle='#72c4bb88';ctx.lineWidth=Math.max(.7,1.2*zoom);
-  for(const edge of graph.edges){const a=lookup.get(edge.source),b=lookup.get(edge.target);if(!a||!b)continue;const sa=screen(a),sb=screen(b);ctx.beginPath();ctx.moveTo(sa.x,sa.y);ctx.lineTo(sb.x,sb.y);ctx.strokeStyle=edge.type==='shared_terms'?'#c69b6177':'#72c4bb88';ctx.setLineDash(edge.type==='shared_terms'?[3,5]:[]);ctx.stroke();ctx.setLineDash([]);
+  for(const edge of graph.edges){const a=lookup.get(edge.source),b=lookup.get(edge.target);if(!a||!b||aggregate)continue;const sa=screen(a),sb=screen(b);ctx.beginPath();ctx.moveTo(sa.x,sa.y);ctx.lineTo(sb.x,sb.y);ctx.strokeStyle=focused!==null&&edge.source!==focused&&edge.target!==focused?'#31505222':faded(edge.source)||faded(edge.target)?'#31505222':focused!==null?'#f4c58bcc':edge.type==='shared_terms'?'#c69b6177':'#72c4bb88';ctx.setLineDash(edge.type==='shared_terms'?[3,5]:[]);ctx.stroke();ctx.setLineDash([]);
    if(signalsEnabled&&active&&!reduced&&mode!=='hex'&&edge.type==='sequence'){const phase=(clock*.0004+graph.edges.indexOf(edge)*.12)%1;ctx.beginPath();ctx.arc(sa.x+(sb.x-sa.x)*phase,sa.y+(sb.y-sa.y)*phase,2.3,0,Math.PI*2);ctx.fillStyle='#f4c58b';ctx.fill()}
   }
   for(const p of positions){
+   if(aggregate)continue;
+   ctx.save();if(faded(p.id))ctx.globalAlpha=.14;
    const s=screen(p),radius=Math.max(4,8*zoom),isSelected=selected===p.node.message_id;
    if(s.x < -50||s.x>width+50||s.y< -50||s.y>height+50)continue;
    if(signalsEnabled&&!reduced&&(isSelected||active)&&mode!=='hex'){
@@ -1225,7 +1258,8 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
     ctx.beginPath();ctx.arc(s.x,s.y,radius,0,Math.PI*2);ctx.fillStyle=colors[p.node.role]||'#a5d3d0';ctx.fill();
     ctx.strokeStyle=isSelected?'#ffe1aa':'#0d2a31';ctx.lineWidth=isSelected?2.5:1.5;ctx.stroke();
    }
-   if(zoom>.53||isSelected){ctx.fillStyle='#b5d4d1';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText((p.node.label||'').replace(/\s+/g,' ').slice(0,mode==='hex'?11:24),s.x,s.y+(mode==='hex'?4:radius+16))}
+   if(zoom>.75||isSelected||hovered?.id===p.id){ctx.fillStyle='#b5d4d1';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText((p.node.label||'').replace(/\s+/g,' ').slice(0,mode==='hex'?11:24),s.x,s.y+(mode==='hex'?4:radius+16))}
+   ctx.restore();
   }
   if(mode!=='hex'){
    ctx.beginPath();ctx.arc(center.x,center.y,22*zoom+6,0,Math.PI*2);ctx.fillStyle='#0b252b';ctx.fill();ctx.strokeStyle='#55d5c5';ctx.lineWidth=2;ctx.stroke();
@@ -1237,8 +1271,8 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
    ctx.beginPath();ctx.arc(center.x+Math.cos(a)*r,center.y+Math.sin(a)*r,4,0,Math.PI*2);ctx.fillStyle='#e8b77c';ctx.fill();
   }
  }
- function tick(t){raf=0;clock=t;const smooth=reduced?1:cameraSpeed;zoom+=(targetCamera.zoom-zoom)*smooth;panX+=(targetCamera.panX-panX)*smooth;panY+=(targetCamera.panY-panY)*smooth;const moving=Math.abs(zoom-targetCamera.zoom)>.0002||Math.abs(panX-targetCamera.panX)>.2||Math.abs(panY-targetCamera.panY)>.2;if(transition){const k=Math.min(1,(t-transition.start)/420),ease=k*k*(3-2*k);for(let i=0;i<positions.length;i++){const p=positions[i],from=transition.from.get(p.id);if(from){p.x=from.x+(transition.to[i].x-from.x)*ease;p.y=from.y+(transition.to[i].y-from.y)*ease}}if(k>=1)transition=null}paint();if((active||transition||mode==='hud'||moving)&&!reduced)raf=requestAnimationFrame(tick)}
- function schedule(){if((active||transition||mode==='hud'||Math.abs(zoom-targetCamera.zoom)>.0002||Math.abs(panX-targetCamera.panX)>.2||Math.abs(panY-targetCamera.panY)>.2)&&!reduced&&!raf)raf=requestAnimationFrame(tick);else paint()}
+ function tick(t){raf=0;clock=t;const dt=Math.min(.05,(t-(lastTick||t))/1000);lastTick=t;springStep(dt);const smooth=reduced?1:cameraSpeed;zoom+=(targetCamera.zoom-zoom)*smooth;panX+=(targetCamera.panX-panX)*smooth;panY+=(targetCamera.panY-panY)*smooth;const moving=Math.abs(zoom-targetCamera.zoom)>.0002||Math.abs(panX-targetCamera.panX)>.2||Math.abs(panY-targetCamera.panY)>.2;if(transition){const k=Math.min(1,(t-transition.start)/420),ease=k*k*(3-2*k);for(let i=0;i<positions.length;i++){const p=positions[i],from=transition.from.get(p.id);if(from){p.x=from.x+(transition.to[i].x-from.x)*ease;p.y=from.y+(transition.to[i].y-from.y)*ease}}if(k>=1){transition=null;for(const p of positions){p.tx=p.x;p.ty=p.y;p.vx=0;p.vy=0}}}paint();if((active||transition||mode==='hud'||moving||physicsMoving)&&!reduced)raf=requestAnimationFrame(tick)}
+ function schedule(){if((active||transition||mode==='hud'||physicsMoving||Math.abs(zoom-targetCamera.zoom)>.0002||Math.abs(panX-targetCamera.panX)>.2||Math.abs(panY-targetCamera.panY)>.2)&&!reduced&&!raf)raf=requestAnimationFrame(tick);else paint()}
  function setActivity(value){active=!!value;$('neural-status').textContent=active?'AI / '+activityStage.toUpperCase():threadId?'ДИАЛОГ':'ОЖИДАНИЕ';$('neural-status').classList.toggle('active',active);if(!active&&raf){cancelAnimationFrame(raf);raf=0}schedule()}
  function updateSelection(){
   const item=graph.nodes.find(n=>n.message_id===selected);
@@ -1248,7 +1282,7 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  }
  function choose(id){selected=id;updateSelection();const item=graph.nodes.find(n=>n.message_id===id);$('neural-inspector').hidden=!item;if(item){$('neural-inspector-meta').textContent=(item.role==='user'?'ПОЛЬЗОВАТЕЛЬ':'MIYORA')+' · '+item.created_at+' · ID '+item.message_id;$('neural-inspector-text').textContent=item.content||item.label}window.dispatchEvent(new CustomEvent('miyora:focus-message',{detail:{id}}))}
  function updateGraph(data){
-  graph=data;layout();selected=null;$('neural-inspector').hidden=true;
+  graph=data;layout();updateSearch();selected=null;$('neural-inspector').hidden=true;
   // Reconcile newly streamed DOM messages with their persisted SQLite IDs.
   const visible=Array.from(document.querySelectorAll('#chat-messages .chat-message'));
   let cursor=visible.length-1;
@@ -1286,13 +1320,14 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  }
  function hit(x,y){for(let i=positions.length-1;i>=0;i--){const p=positions[i],s=screen(p);if(Math.hypot(x-s.x,y-s.y)<Math.max(13,13*zoom))return p}return null}
  function zoomAt(factor,x=width/2,y=height/2){
-  const next=Math.max(.16,Math.min(4,zoom*factor)),ratio=next/zoom;
+  const next=Math.max(.16,Math.min(4,targetCamera.zoom*factor)),ratio=next/zoom;
   targetCamera.panX=x-width/2+(panX-(x-width/2))*ratio;targetCamera.panY=y-height/2+(panY-(y-height/2))*ratio;targetCamera.zoom=next;if(reduced){panX=targetCamera.panX;panY=targetCamera.panY;zoom=next}schedule();
  }
  viewport.addEventListener('wheel',e=>{e.preventDefault();const r=viewport.getBoundingClientRect();zoomAt(e.deltaY<0?1.12:.89,e.clientX-r.left,e.clientY-r.top)},{passive:false});
  canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY};dragged=false;canvas.setPointerCapture(e.pointerId);viewport.classList.add('dragging')});
- canvas.addEventListener('pointermove',e=>{if(!pointer||pointer.id!==e.pointerId)return;const dx=e.clientX-pointer.lastX,dy=e.clientY-pointer.lastY;if(Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y)>5)dragged=true;if(dragged){panX+=dx;panY+=dy;targetCamera.panX=panX;targetCamera.panY=panY;paint()}pointer.lastX=e.clientX;pointer.lastY=e.clientY});
+ canvas.addEventListener('pointermove',e=>{if(!pointer){const r=canvas.getBoundingClientRect(),next=hit(e.clientX-r.left,e.clientY-r.top);if((next?.id??null)!==(hovered?.id??null)){hovered=next;schedule()}return}if(pointer.id!==e.pointerId)return;const dx=e.clientX-pointer.lastX,dy=e.clientY-pointer.lastY;if(Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y)>5)dragged=true;if(dragged){panX+=dx;panY+=dy;targetCamera.panX=panX;targetCamera.panY=panY;paint()}pointer.lastX=e.clientX;pointer.lastY=e.clientY});
  canvas.addEventListener('pointerup',e=>{if(!pointer||pointer.id!==e.pointerId)return;if(!dragged){const r=canvas.getBoundingClientRect(),node=hit(e.clientX-r.left,e.clientY-r.top);if(node)choose(node.node.message_id)}pointer=null;viewport.classList.remove('dragging')});
+ canvas.addEventListener('pointerleave',()=>{if(!pointer){hovered=null;schedule()}});
  canvas.addEventListener('pointercancel',()=>{pointer=null;viewport.classList.remove('dragging')});
  document.querySelectorAll('[data-neural-mode]').forEach(button=>button.addEventListener('click',()=>{const before=new Map(positions.map(p=>[p.id,{x:p.x,y:p.y}]));mode=button.dataset.neuralMode;document.querySelectorAll('[data-neural-mode]').forEach(b=>{const on=b===button;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on))});layout();const target=positions.map(p=>({x:p.x,y:p.y}));if(!reduced&&before.size){transition={from:before,to:target,start:performance.now()};positions.forEach(p=>{const old=before.get(p.id);if(old){p.x=old.x;p.y=old.y}})}fit();schedule()}));
  $('neural-inspector-open').onclick=()=>{if(selected!==null)window.dispatchEvent(new CustomEvent('miyora:focus-message',{detail:{id:selected}}))};
