@@ -500,9 +500,9 @@ refreshNotes();
 
 function kbHighlight(content,extension,target,focusLine=0){
  target.replaceChildren();
- const language=/\\.(py|pyi)$/.test(extension)?'python':/\\.(js|jsx|ts|tsx|json|jsonc)$/.test(extension)?'js':/\\.(html|htm|xml|svg)$/.test(extension)?'html':/\\.(css|scss)$/.test(extension)?'css':'plain';
- const token=/("(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'|\x60(?:\\\\.|[^\x60\\\\])*\x60|#[^\\n]*|\/\/[^\\n]*|\b(?:const|let|var|function|return|if|else|class|import|from|def|async|await|try|except|for|while|in|true|false|null|None|True|False|export|default|interface|type|public|private|new|throw|raise|with|as)\b|\b\d+(?:\.\d+)?\b)/g;
- const lines=content.split('\\n');
+ const language=/\.(py|pyi)$/.test(extension)?'python':/\.(js|jsx|ts|tsx|json|jsonc)$/.test(extension)?'js':/\.(html|htm|xml|svg)$/.test(extension)?'html':/\.(css|scss)$/.test(extension)?'css':'plain';
+ const token=/("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\x60(?:\\.|[^\x60\\])*\x60|#[^\n]*|\/\/[^\n]*|\b(?:const|let|var|function|return|if|else|class|import|from|def|async|await|try|except|for|while|in|true|false|null|None|True|False|export|default|interface|type|public|private|new|throw|raise|with|as)\b|\b\d+(?:\.\d+)?\b)/g;
+ const lines=content.split('\n');
  for(let index=0;index<lines.length;index++){
   const row=document.createElement('div');row.className='kb-code-line';if(index+1===focusLine)row.classList.add('kb-code-focus');
   const number=document.createElement('span');number.className='kb-line-number';number.textContent=String(index+1);row.append(number);
