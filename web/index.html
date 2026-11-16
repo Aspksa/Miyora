@@ -185,6 +185,31 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
 .kb-memory-section .db-tools button .kb-icon{width:13px;height:13px}
 .kb-editor-actions #db-save .kb-icon{color:#294b29}
 .kb-pagination button .kb-icon{width:15px;height:15px}
+
+/* Search and syntax-aware, read-only source preview */
+.kb-global-search{margin:0 0 14px;border:1px solid #303a33;border-radius:12px;background:#141b18;padding:10px}
+.kb-search-field{display:flex;gap:9px}
+.kb-search-field input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#e9f4e7;font:inherit;font-size:13px;padding:9px}
+.kb-search-field input:focus-visible{outline:2px solid #8fba83;border-radius:7px}
+.kb-search-field button{border:1px solid #52694e;border-radius:8px;background:#b8e4a0;color:#1b2b1b;padding:9px 17px;font-weight:700;cursor:pointer}
+.kb-search-results{max-height:300px;overflow:auto;border-top:1px solid #2b392f;margin-top:10px;padding-top:8px}
+.kb-search-summary{font-size:10px;color:#8ba38d;margin:5px 8px 9px}
+.kb-search-result{display:flex;align-items:flex-start;gap:10px;width:100%;padding:10px;background:transparent;border:0;border-radius:8px;color:#e4eee2;text-align:left;cursor:pointer}
+.kb-search-result:hover,.kb-search-result:focus-visible{background:#26352a}
+.kb-search-result span{min-width:0}
+.kb-search-result strong{display:block;font-size:12px;overflow-wrap:anywhere}
+.kb-search-result small{display:block;font-size:11px;color:#94a59a;margin-top:4px;overflow-wrap:anywhere}
+.kb-preview{margin-top:11px;border:1px solid #303a33;border-radius:10px;background:#0d1213;overflow:hidden}
+.kb-preview-header{display:flex;justify-content:space-between;flex-wrap:wrap;gap:7px;padding:11px 12px;border-bottom:1px solid #29352e}
+.kb-preview-header strong{font-size:11px;color:#dcebd9;overflow-wrap:anywhere}
+.kb-preview-header span{font-size:10px;color:#8da18f}
+.kb-code{margin:0;padding:9px 0;max-height:440px;overflow:auto;font:11px/1.65 Consolas,"Cascadia Code",monospace;color:#cbd7cf;tab-size:2}
+.kb-code-line{display:flex;min-width:max-content;padding-right:12px}
+.kb-code-focus{background:#344b325c;box-shadow:inset 2px 0 #b8e4a0}
+.kb-line-number{position:sticky;left:0;min-width:42px;padding:0 10px;text-align:right;color:#697a72;background:#0d1213;user-select:none}
+.kb-code-focus .kb-line-number{background:#263728}
+.kb-line-body{white-space:pre}
+.kb-syn-keyword{color:#a9baff}.kb-syn-string{color:#b9dc9d}.kb-syn-comment{color:#7d9589}.kb-syn-number{color:#f0bb86}
 </style>
 </head>
 <body>
@@ -216,6 +241,10 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
         <div class="kb-intro-title"><span class="kb-eyebrow">MIYORA / LOCAL INTELLIGENCE</span><h2>Центр знаний<span class="kb-accent">.</span></h2><p>Файлы, данные и память проекта — в одном пространстве.</p></div>
         <button type="button" class="kb-refresh-all" id="kb-refresh-all" aria-label="Обновить базу знаний">↻ <span>Обновить</span></button>
       </div>
+      <section class="kb-global-search" aria-label="Глобальный поиск">
+        <div class="kb-search-field"><input id="kb-global-query" type="search" placeholder="Поиск по файлам, коду и заметкам…" aria-label="Глобальный поиск" autocomplete="off"><button id="kb-global-submit" type="button">Найти</button></div>
+        <div class="kb-search-results" id="kb-search-results" aria-live="polite" hidden></div>
+      </section>
       <div class="kb-metrics" aria-label="Состояние проекта">
         <div class="kb-metric"><span>ЗАПИСИ</span><strong id="kb-count">—</strong><small>В памяти проекта</small></div>
         <div class="kb-metric"><span>ХРАНИЛИЩЕ</span><strong id="kb-dbsize">—</strong><small>SQLite / WAL / SHM</small></div>
@@ -226,7 +255,8 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
         <aside class="kb-project-rail" aria-labelledby="kb-files-heading">
           <div class="kb-section-head"><div><span class="kb-eyebrow">01 / EXPLORER</span><h3 id="kb-files-heading">Структура проекта</h3></div><span class="kb-muted" id="kb-filecount">…</span></div>
           <div class="kb-tree" id="kb-tree" aria-label="Файлы и каталоги"></div>
-          <div class="kb-file-inspector" id="kb-file-detail"><span class="kb-eyebrow">INSPECTOR</span><strong>Объект не выбран</strong><p>Нажмите на файл или каталог, чтобы увидеть сведения.</p></div>
+          <div class="kb-file-inspector" id="kb-file-detail"><span class="kb-eyebrow">INSPECTOR</span><strong>Объект не выбран</strong><p>Выберите файл для просмотра содержимого.</p></div>
+          <div class="kb-preview" id="kb-preview" hidden><div class="kb-preview-header"><strong id="kb-preview-name">Файл</strong><span id="kb-preview-meta"></span></div><pre class="kb-code" id="kb-preview-code" tabindex="0"></pre></div>
         </aside>
         <div class="kb-main-stack">
           <section class="kb-data-section" aria-labelledby="kb-tables-heading">
@@ -411,6 +441,7 @@ refreshNotes();
    row.onclick=()=>{
     host.querySelectorAll('[aria-selected]').forEach(x=>x.removeAttribute('aria-selected'));row.setAttribute('aria-selected','true');
     if(folder){state.expanded.has(full)?state.expanded.delete(full):state.expanded.add(full);drawTree()}
+    else kbOpenFile(full.slice(state.tree.name.length+1));
     const d=el('kb-file-detail');d.replaceChildren(text('strong',full),text('p','Тип: '+(folder?'Каталог':node.type)+' · Размер: '+size(node.bytes)),text('p',folder?'Элементов: '+(node.children||[]).length+(node.truncated?' · Список ограничен':''):'Путь относительно корня проекта'));
    };
    host.append(row);
@@ -466,6 +497,64 @@ refreshNotes();
    drawTables();await renderTable();el('kb-error').textContent='';
   }catch(e){error(e)}
  }
+
+function kbHighlight(content,extension,target,focusLine=0){
+ target.replaceChildren();
+ const language=/\\.(py|pyi)$/.test(extension)?'python':/\\.(js|jsx|ts|tsx|json|jsonc)$/.test(extension)?'js':/\\.(html|htm|xml|svg)$/.test(extension)?'html':/\\.(css|scss)$/.test(extension)?'css':'plain';
+ const token=/("(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'|\x60(?:\\\\.|[^\x60\\\\])*\x60|#[^\\n]*|\/\/[^\\n]*|\b(?:const|let|var|function|return|if|else|class|import|from|def|async|await|try|except|for|while|in|true|false|null|None|True|False|export|default|interface|type|public|private|new|throw|raise|with|as)\b|\b\d+(?:\.\d+)?\b)/g;
+ const lines=content.split('\\n');
+ for(let index=0;index<lines.length;index++){
+  const row=document.createElement('div');row.className='kb-code-line';if(index+1===focusLine)row.classList.add('kb-code-focus');
+  const number=document.createElement('span');number.className='kb-line-number';number.textContent=String(index+1);row.append(number);
+  const body=document.createElement('span');body.className='kb-line-body';const line=lines[index];let pos=0;token.lastIndex=0;
+  if(language!=='plain')for(const match of line.matchAll(token)){
+   const at=match.index;body.append(document.createTextNode(line.slice(pos,at)));
+   const part=document.createElement('span'),value=match[0];part.className=value.startsWith('#')||value.startsWith('//')?'kb-syn-comment':/^['"\x60]/.test(value)?'kb-syn-string':/^\d/.test(value)?'kb-syn-number':'kb-syn-keyword';
+   part.textContent=value;body.append(part);pos=at+value.length;
+  }
+  body.append(document.createTextNode(line.slice(pos)));row.append(body);target.append(row);
+ }
+ if(focusLine){const focus=target.querySelector('.kb-code-focus');if(focus)focus.scrollIntoView({block:'center',behavior:'auto'});}
+}
+async function kbOpenFile(path,line=0){
+ const preview=el('kb-preview'),detail=el('kb-file-detail');preview.hidden=false;
+ el('kb-preview-name').textContent=path;el('kb-preview-meta').textContent='Загрузка…';
+ el('kb-preview-code').replaceChildren();
+ try{
+  const response=await fetch('/api/explorer/file?path='+encodeURIComponent(path));
+  const data=await response.json();if(!response.ok)throw Error(data.error||'HTTP '+response.status);
+  el('kb-preview-meta').textContent=data.lines+' строк · '+size(data.bytes)+' · только чтение';
+  kbHighlight(data.content,data.extension,el('kb-preview-code'),line);
+  detail.replaceChildren(text('strong',data.path),text('p','Предпросмотр · '+data.lines+' строк · '+size(data.bytes)));
+ }catch(err){el('kb-preview-meta').textContent='Недоступно';el('kb-preview-code').textContent='Не удалось открыть файл: '+err.message;}
+}
+let kbSearchSeq=0;
+async function kbRunSearch(){
+ const query=el('kb-global-query').value.trim(),host=el('kb-search-results'),seq=++kbSearchSeq;
+ host.hidden=false;host.replaceChildren();
+ if(query.length<2){host.append(text('p','Введите минимум 2 символа.','kb-muted'));return;}
+ host.append(text('p','Ищем в файлах и заметках…','kb-muted'));
+ try{
+  const response=await fetch('/api/search?q='+encodeURIComponent(query));
+  const data=await response.json();if(seq!==kbSearchSeq)return;
+  if(!response.ok)throw Error(data.error||'HTTP '+response.status);
+  host.replaceChildren();
+  const heading=text('div',data.results.length+' результатов · проверено файлов: '+data.scanned_files+(data.truncated?' · список ограничен':''),'kb-search-summary');host.append(heading);
+  for(const result of data.results){
+   const item=document.createElement('button');item.type='button';item.className='kb-search-result';
+   item.append(kbIcon(result.type==='note'?'notes':'file'));
+   const info=document.createElement('span');info.append(text('strong',result.title+(result.line?' · строка '+result.line:'')),text('small',result.excerpt||result.path||''));item.append(info);
+   item.onclick=()=>{
+    if(result.type==='file'){kbOpenFile(result.path,result.line||0);el('kb-tree').scrollIntoView({block:'nearest'});}
+    else {el('db-search').value=result.title;refreshNotes();el('db-list').scrollIntoView({block:'nearest'});}
+   };host.append(item);
+  }
+  if(!data.results.length)host.append(text('p','Совпадений не найдено.','kb-muted'));
+ }catch(err){if(seq===kbSearchSeq)host.replaceChildren(text('p','Ошибка поиска: '+err.message,'kb-muted'));}
+}
+el('kb-global-submit').onclick=kbRunSearch;
+el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();kbRunSearch();}});
+
  el('kb-open').addEventListener('click',load);
  el('kb-refresh-all').addEventListener('click',()=>{load();refreshNotes()});
  el('kb-show-records').onclick=()=>{state.view='records';renderTable().catch(error)};
