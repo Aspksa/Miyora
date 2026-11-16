@@ -975,7 +975,7 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
      }
     }
    }
-   if(active===sequence){if(answer)history.push({role:'assistant',content:answer});else renderMarkdown(output,'Ответ пуст.');await loadThreads()}
+   if(active===sequence){if(answer)history.push({role:'assistant',content:answer});else renderMarkdown(output,'Ответ пуст.');window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:true,stage:'синхронизация'}}));await loadThreads()}
   }catch(e){if(active===sequence){const last=host.lastElementChild?.querySelector('.chat-message-text');if(last)renderMarkdown(last,signal.aborted?'Генерация остановлена.':errors[e.message]||'Ошибка: '+e.message);history.pop();await loadThreads().catch(()=>{})}}
   finally{if(active===sequence){stop();window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:false}}));window.dispatchEvent(new CustomEvent('miyora:refresh'));input.focus()}}
  }
