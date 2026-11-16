@@ -521,6 +521,17 @@ class MiyoraTests(unittest.TestCase):
                        'if(!reduced)', 'miyora:focus-message'):
             self.assertIn(marker, html)
 
+    def test_mizuyori_visual_design(self):
+        with urlopen(self.base + "/") as response:
+            html = response.read().decode("utf-8")
+        for token in ('id="neural-theme"', 'data-mz-theme="dark"',
+                      'value="gold"', 'value="amber"', 'value="jade"',
+                      'miyora-neural-theme', 'allowedThemes',
+                      '--mz-accent', 'backdrop-filter:blur(14px)',
+                      'prefers-reduced-motion:reduce',
+                      'grid-template-columns:minmax(0,3fr) minmax(340px,2fr)'):
+            self.assertIn(token, html)
+
     def test_streaming_provider(self):
         from app.core import cloudru,chat
         cloudru.save_key("test-stream-key")
