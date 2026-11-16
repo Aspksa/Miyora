@@ -92,7 +92,12 @@ try {
     if (-not ($pthLines | Where-Object { $_.Trim() -eq '..\..\' })) {
       Add-Content -LiteralPath $pth -Value '..\..\' -Encoding ASCII
     }
+    if (-not (Test-Path -LiteralPath (Join-Path $appDir 'doctor.py') -PathType Leaf)) { throw 'Missing application file: doctor.py' }
     $arguments = @('-u', (Join-Path $appDir 'main.py'))
+    if (-not $Doctor) {
+      & $program (Join-Path $appDir 'doctor.py')
+      if ($LASTEXITCODE -ne 0) { throw 'Portable Python preflight failed. Run start.bat --doctor for details.' }
+    }
     if ($Doctor) { $arguments = @('-u', (Join-Path $appDir 'doctor.py')) }
   }
   if ($Doctor -and (Test-Path -LiteralPath $exe -PathType Leaf)) {
