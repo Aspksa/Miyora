@@ -354,6 +354,39 @@ header .right .home-status-dot{margin-left:2px}
 .chat-message-text table{border-collapse:collapse;display:block;overflow:auto;max-width:100%;margin:12px 0}
 .chat-message-text td,.chat-message-text th{border:1px solid #424d40;padding:7px 10px;text-align:left}.chat-message-text th{background:#303a30}
 .chat-stop{background:#bca68d!important}
+
+/* Neural workspace: persistent 60/40 graph and conversation split */
+.chat-layout{grid-template-columns:minmax(0,3fr) minmax(340px,2fr);position:relative;background:#081018}
+.neural-panel{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#102832 0%,#091620 52%,#07121b 100%);border-right:1px solid #274049;color:#d9eae8}
+.neural-header{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:19px 24px 14px;border-bottom:1px solid #1e3640}
+.neural-eyebrow{color:#4baba6;font:700 9px Consolas,monospace;letter-spacing:.16em}
+.neural-header h2{margin:6px 0 2px;font-size:17px;letter-spacing:.02em;font-weight:650}.neural-header p{margin:0;color:#799b9d;font-size:11px}
+.neural-live{flex:none;color:#70c9b4;border:1px solid #29554f;background:#0d292a;border-radius:20px;padding:7px 10px;font:700 10px Consolas,monospace;letter-spacing:.09em}
+.neural-live.active{color:#e3c18b;border-color:#87663a;background:#30291c}
+.neural-canvas-wrap{position:relative;flex:1;min-height:180px;overflow:hidden;touch-action:none;cursor:grab}
+.neural-canvas-wrap.dragging{cursor:grabbing}
+#neural-canvas{display:block;width:100%;height:100%}
+.neural-empty{position:absolute;left:50%;top:72%;transform:translate(-50%,-50%);width:min(80%,300px);text-align:center;color:#6e9b9b;font-size:12px;line-height:1.6;pointer-events:none}
+.neural-empty[hidden]{display:none}
+.neural-controls{position:absolute;right:16px;bottom:15px;display:flex;gap:5px}
+.neural-controls button{width:32px;height:32px;background:#112c34;border:1px solid #2b5157;border-radius:8px;color:#b7e6df;font-size:18px;cursor:pointer}
+.neural-controls button:hover{background:#1b4347}
+.neural-bottom{flex:none;padding:13px 20px 15px;border-top:1px solid #1e3640;background:#091721}
+.neural-stats{display:flex;flex-wrap:wrap;gap:12px;color:#679b9c;font:10px Consolas,monospace}
+.neural-selected{margin-top:9px;color:#b4d4ce;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.neural-node-list{display:flex;gap:5px;overflow-x:auto;max-width:100%;padding-top:8px;scrollbar-width:thin}
+.neural-node-list button{flex:none;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid #2c4d50;border-radius:6px;background:#11252d;color:#a9d4ce;padding:5px 7px;font-size:10px;cursor:pointer}
+.neural-node-list button[aria-current=true]{border-color:#d6b58b;color:#f4d4a8}
+.chat-main{background:#151b1a}.chat-top{padding:0 15px;gap:8px}.chat-top-name{flex:1;min-width:0}.chat-top-model{max-width:42%}
+.chat-sidebar{display:none;position:absolute;z-index:5;top:0;bottom:0;left:60%;width:min(280px,40%);box-shadow:15px 0 35px #0008}
+.chat-layout.history-open .chat-sidebar{display:flex}
+.chat-sidebar-toggle{flex:none;background:transparent;border:1px solid #3b4943;border-radius:7px;color:#d4ded6;font-size:17px;padding:4px 9px;cursor:pointer}
+.chat-messages{padding:20px 16px 30px;gap:20px}.chat-message{gap:9px}.chat-message-text{font-size:13px}.chat-welcome{width:calc(100% - 34px);margin:40px auto 25px}.chat-welcome h1{font-size:clamp(25px,2.8vw,36px)}
+.chat-suggestions{grid-template-columns:1fr;gap:7px;margin-top:22px}.chat-suggestions button{min-height:42px;padding:10px}
+.chat-compose-wrap{width:calc(100% - 26px);padding-bottom:10px}
+@media(max-width:950px){.chat-layout{grid-template-columns:minmax(0,1fr) minmax(300px,1fr)}.chat-sidebar{left:50%;width:min(280px,50%)}.neural-header{padding:14px}.neural-stats span:last-child{display:none}}
+@media(max-width:690px){.chat-layout{display:flex;flex-direction:column;overflow:auto}.neural-panel{flex:0 0 42%;min-height:240px;border-right:0;border-bottom:1px solid #274049}.chat-main{flex:1 0 58%;min-height:310px}.chat-sidebar{left:0;width:min(290px,85%)}.neural-header{padding:10px 14px}.neural-header h2{font-size:14px}.neural-bottom{padding:8px 12px}.neural-node-list{display:none}.chat-top{height:45px}.chat-welcome{margin:18px auto}.chat-welcome-icon{display:none}.chat-suggestions{margin-top:12px}.chat-suggestions button{min-height:36px}}
+@media(prefers-reduced-motion:reduce){.neural-live{transition:none}}
 </style>
 </head>
 <body>
@@ -366,7 +399,12 @@ header .right .home-status-dot{margin-left:2px}
 </div></div>
 </header>
 <main class="chat-layout" id="chat-app">
-  <aside class="chat-sidebar" aria-label="Навигация чата">
+  <section class="neural-panel" aria-label="Граф связей диалога">
+    <div class="neural-header"><div><span class="neural-eyebrow">MIYORA / NEURAL WORKSPACE</span><h2>Карта диалога</h2><p>Сообщения и связи из SQLite</p></div><span class="neural-live" id="neural-status">ОЖИДАНИЕ</span></div>
+    <div class="neural-canvas-wrap" id="neural-viewport"><canvas id="neural-canvas" aria-label="Интерактивный граф сообщений" role="img"></canvas><div class="neural-empty" id="neural-empty">Начните диалог или выберите чат, чтобы увидеть граф сообщений.</div><div class="neural-controls"><button type="button" id="neural-zoom-in" title="Приблизить" aria-label="Приблизить граф">+</button><button type="button" id="neural-zoom-out" title="Отдалить" aria-label="Отдалить граф">−</button><button type="button" id="neural-reset" title="Сбросить вид" aria-label="Сбросить вид">⌖</button></div></div>
+    <div class="neural-bottom"><div class="neural-stats"><span id="neural-node-count">0 УЗЛОВ</span><span id="neural-edge-count">0 СВЯЗЕЙ</span><span>КОЛЕСО — МАСШТАБ · ПЕРЕТАСКИВАНИЕ — ОБЗОР</span></div><div class="neural-selected" id="neural-selected" aria-live="polite">Выберите узел, чтобы перейти к сообщению</div><div class="neural-node-list" id="neural-node-list" aria-label="Доступный список узлов графа"></div></div>
+  </section>
+  <aside class="chat-sidebar" id="chat-sidebar" aria-label="Навигация чата">
     <div class="chat-side-title"><span class="chat-monogram">✳</span><span>Рабочее пространство</span></div>
     <button type="button" class="chat-new" id="chat-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Новый чат</button>
     <div class="chat-side-label">СЕЙЧАС</div>
@@ -374,7 +412,7 @@ header .right .home-status-dot{margin-left:2px}
     <div class="chat-side-foot">Miyora · локальное приложение</div>
   </aside>
   <section class="chat-main" aria-label="AI-чат">
-    <div class="chat-top"><span class="chat-top-name">Miyora <span class="chat-top-chevron">/</span> Чат</span><span class="chat-top-model" id="chat-model">Cloud.ru</span></div>
+    <div class="chat-top"><button type="button" id="chat-sidebar-toggle" class="chat-sidebar-toggle" aria-label="Показать историю чатов" aria-expanded="false" aria-controls="chat-sidebar">☰</button><span class="chat-top-name">Miyora <span class="chat-top-chevron">/</span> Чат</span><span class="chat-top-model" id="chat-model">Cloud.ru</span></div>
     <div class="chat-scroll" id="chat-scroll" aria-live="polite">
       <div class="chat-welcome" id="chat-welcome">
         <div class="chat-welcome-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 34V14l16 16 16-16v20"/><path d="M8 14l16 16 16-16" opacity=".3"/></svg></div>
@@ -877,8 +915,8 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
    if(!parts.length){parts.push(lines[i++])}inline(p,parts.join('\n'));target.append(p);
   }
  }
- function addMessage(role,content){
-  const item=document.createElement('article');item.className='chat-message';item.dataset.role=role;
+ function addMessage(role,content,messageId){
+  const item=document.createElement('article');item.className='chat-message';item.dataset.role=role;if(messageId)item.dataset.messageId=String(messageId);
   if(role==='assistant'){const avatar=document.createElement('span');avatar.className='chat-avatar';avatar.textContent='✳';item.append(avatar)}
   const bubble=document.createElement('div');bubble.className='chat-bubble';
   if(role==='assistant'){const label=document.createElement('span');label.className='chat-message-label';label.textContent='Miyora';bubble.append(label)}
@@ -896,11 +934,12 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
   }
  }
  async function loadThreads(){const data=await api('/api/chats');threads=data.threads;drawThreads()}
- function stop(){if(controller){controller.abort();controller=null}send.classList.remove('chat-stop');send.title='Отправить';send.setAttribute('aria-label','Отправить сообщение');input.disabled=false}
- function reset(){sequence++;stop();threadId=null;history=[];host.replaceChildren();$('chat-welcome').hidden=false;input.value='';drawThreads()}
+ function stop(){if(controller){controller.abort();controller=null;window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:false}}));window.dispatchEvent(new CustomEvent('miyora:refresh'))}send.classList.remove('chat-stop');send.title='Отправить';send.setAttribute('aria-label','Отправить сообщение');input.disabled=false}
+ function reset(){sequence++;stop();threadId=null;history=[];window.dispatchEvent(new CustomEvent('miyora:thread',{detail:{id:null}}));window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:false}}));host.replaceChildren();$('chat-welcome').hidden=false;input.value='';drawThreads()}
  async function select(id){
-  sequence++;stop();threadId=id;history=[];host.replaceChildren();$('chat-welcome').hidden=true;drawThreads();
-  try{const data=await api('/api/chats/'+id);if(threadId!==id)return;history=data.messages.map(m=>({role:m.role,content:m.content}));history.forEach(m=>addMessage(m.role,m.content))}
+  $('chat-app').classList.remove('history-open');$('chat-sidebar-toggle').setAttribute('aria-expanded','false');
+  sequence++;stop();threadId=id;history=[];window.dispatchEvent(new CustomEvent('miyora:thread',{detail:{id}}));host.replaceChildren();$('chat-welcome').hidden=true;drawThreads();
+  try{const data=await api('/api/chats/'+id);if(threadId!==id)return;history=data.messages.map(m=>({role:m.role,content:m.content}));history.forEach(m=>addMessage(m.role,m.content,m.id))}
   catch(e){addMessage('assistant','Не удалось открыть диалог: '+e.message)}
  }
  async function submit(){
@@ -909,8 +948,8 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
   input.value='';input.disabled=true;send.classList.add('chat-stop');send.title='Остановить';send.setAttribute('aria-label','Остановить генерацию');
   $('chat-welcome').hidden=true;
   try{
-   if(!threadId){const t=await api('/api/chats','POST',{title:value.slice(0,80)});threadId=t.id;await loadThreads()}
-   history.push({role:'user',content:value});addMessage('user',value);
+   if(!threadId){const t=await api('/api/chats','POST',{title:value.slice(0,80)});threadId=t.id;window.dispatchEvent(new CustomEvent('miyora:thread',{detail:{id:threadId}}));await loadThreads()}
+   history.push({role:'user',content:value});addMessage('user',value);window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:true}}));
    const output=addMessage('assistant','Думаю…');let answer='',finished=false,buffer='';
    const response=await fetch('/api/chats/'+threadId+'/stream',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history.slice(-30)})});
    if(!response.ok){const err=await response.json();throw Error(err.error||'HTTP '+response.status)}
@@ -927,8 +966,13 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
    }
    if(active===sequence){if(answer)history.push({role:'assistant',content:answer});else renderMarkdown(output,'Ответ пуст.');await loadThreads()}
   }catch(e){if(active===sequence){const last=host.lastElementChild?.querySelector('.chat-message-text');if(last)renderMarkdown(last,signal.aborted?'Генерация остановлена.':errors[e.message]||'Ошибка: '+e.message);history.pop();await loadThreads().catch(()=>{})}}
-  finally{if(active===sequence){stop();input.focus()}}
+  finally{if(active===sequence){stop();window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:false}}));window.dispatchEvent(new CustomEvent('miyora:refresh'));input.focus()}}
  }
+ $('chat-sidebar-toggle').addEventListener('click',()=>{const opened=$('chat-app').classList.toggle('history-open');$('chat-sidebar-toggle').setAttribute('aria-expanded',String(opened))});
+ window.addEventListener('miyora:focus-message',e=>{
+  const id=String(e.detail.id),target=Array.from(host.children).find(el=>el.dataset.messageId===id);
+  if(target){target.scrollIntoView({behavior:'smooth',block:'center'});target.style.outline='1px solid #6cd7c7';setTimeout(()=>{target.style.outline=''},1700)}
+ });
  $('chat-form').addEventListener('submit',e=>{e.preventDefault();if(controller){stop()}else submit()});
  input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();submit()}});
  $('chat-new').onclick=()=>{reset();input.focus()};
