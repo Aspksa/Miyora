@@ -309,6 +309,34 @@ class MiyoraTests(unittest.TestCase):
                       'id="cloudru-load-models"', 'id="cloudru-save"'):
             self.assertIn(token, page)
 
+    def test_home_connection_status(self):
+        from app.core import cloudru
+        cloudru.clear_key()
+        with urlopen(self.base + "/api/status/connections") as response:
+            data = json.load(response)
+        self.assertEqual(data["system"], "online")
+        self.assertEqual(data["api"], "not_configured")
+        with urlopen(self.base + "/api/status/connections/check") as response:
+            self.assertEqual(json.load(response)["api"], "not_configured")
+        cloudru.save_key("test-status-cloudru-key")
+        try:
+            with patch.object(cloudru, "models", return_value={"models": ["test/model"]}):
+                with urlopen(self.base + "/api/status/connections/check") as response:
+                    self.assertEqual(json.load(response)["api"], "connected")
+            with patch.object(cloudru, "models", side_effect=cloudru.CloudError("cloudru_auth_failed")):
+                with urlopen(self.base + "/api/status/connections/check") as response:
+                    self.assertEqual(json.load(response)["api"], "disconnected")
+        finally:
+            cloudru.clear_key()
+
+    def test_home_status_icons(self):
+        with urlopen(self.base + "/") as response:
+            page = response.read().decode("utf-8")
+        self.assertIn('id="system-status"', page)
+        self.assertIn('id="api-status"', page)
+        self.assertIn('/api/status/connections/check', page)
+        self.assertIn('Cloud.ru API', page)
+
     def test_homepage(self):
         with urlopen(self.base + "/") as response:
             self.assertIn(b"Miyora", response.read())
