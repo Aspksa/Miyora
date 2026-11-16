@@ -58,3 +58,7 @@ API: `GET /api/health`, `GET /api/db/health`, `GET /api/notes`, `POST /api/notes
 - Тесты — `tests/`.
 - Запуск Windows — `start.bat` и `launcher.ps1`.
 - Данные пользователя и Python runtime не коммитить.
+
+## Проверка стабильности
+
+Запустите `start.bat --doctor` из командной строки Windows. Команда проверяет структуру, импорты, SQLite и права записи и выводит JSON с результатами. Обычный запуск автоматически выполняет предварительную проверку перед запуском HTTP-сервера. GitHub Actions запускает настоящий `start.bat --doctor` дважды из каталога с кириллицей, пробелами и скобками: первый запуск загружает Python, второй повторно использует его. Тесты HTTP API выполняются отдельно командой `python -m unittest discover -s tests -v`.
