@@ -419,9 +419,9 @@ class MiyoraTests(unittest.TestCase):
             def __enter__(self): return self
             def __exit__(self,*args): return False
             def __iter__(self):
-                return iter([b'data: {"choices":[{"delta":{"content":"Hi"}}]}\\n',
-                             b'data: {"choices":[{"delta":{"content":"!"}}]}\\n',
-                             b'data: [DONE]\\n'])
+                return iter([b'data: {"choices":[{"delta":{"content":"Hi"}}]}\n',
+                             b'data: {"choices":[{"delta":{"content":"!"}}]}\n',
+                             b'data: [DONE]\n'])
         try:
             with patch.object(chat,"urlopen",return_value=FakeResponse()) as mocked:
                 self.assertEqual("".join(chat.stream([{"role":"user","content":"Hello"}])),"Hi!")
