@@ -1054,6 +1054,19 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  function choose(id){selected=id;updateSelection();window.dispatchEvent(new CustomEvent('miyora:focus-message',{detail:{id}}))}
  function updateGraph(data){
   graph=data;layout();selected=null;
+  // Reconcile newly streamed DOM messages with their persisted SQLite IDs.
+  const visible=Array.from(document.querySelectorAll('#chat-messages .chat-message'));
+  let cursor=visible.length-1;
+  for(let i=graph.nodes.length-1;i>=0;i--){
+   const node=graph.nodes[i];
+   while(cursor>=0){
+    const el=visible[cursor--],content=el.querySelector('.chat-message-text');
+    if(el.dataset.role===node.role&&content&&content.textContent.startsWith(node.label)){
+     el.dataset.messageId=String(node.message_id);break;
+    }
+   }
+   if(cursor<0)break;
+  }
   $('neural-node-count').textContent=graph.nodes.length+' УЗЛОВ';
   $('neural-edge-count').textContent=graph.edges.length+' СВЯЗЕЙ';
   $('neural-empty').hidden=graph.nodes.length>0;
