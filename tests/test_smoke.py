@@ -64,6 +64,36 @@ class MiyoraTests(unittest.TestCase):
         with urlopen(request) as response:
             self.assertTrue(json.load(response)["deleted"])
 
+    def test_database_backup_and_trash(self):
+        from app.core import database as db
+        note = db.create_note("Резервная", "содержимое")
+        self.assertGreaterEqual(db.stats()["total"], 1)
+        self.assertTrue(db.delete_note(note["id"]))
+        self.assertFalse(any(n["id"] == note["id"] for n in db.list_notes()))
+        self.assertTrue(any(n["id"] == note["id"] for n in db.list_notes(include_deleted=True)))
+        self.assertTrue(db.restore_note(note["id"]))
+        self.assertEqual(db.update_note(note["id"], "Обновлено")["title"], "Обновлено")
+        target = db.backup()
+        self.assertTrue(target.is_file())
+        import sqlite3
+        with sqlite3.connect(str(target)) as backup_db:
+            self.assertEqual(backup_db.execute("PRAGMA integrity_check").fetchone()[0], "ok")
+            self.assertEqual(backup_db.execute("SELECT title FROM notes WHERE id=?", (note["id"],)).fetchone()[0], "Обновлено")
+
+    def test_database_api_stats_and_search(self):
+        with urlopen(self.base + "/api/db/stats") as response:
+            self.assertIn("schema_version", json.load(response))
+        with urlopen(self.base + "/api/notes?search=does-not-exist-123456") as response:
+            self.assertEqual(json.load(response)["notes"], [])
+
+    def test_cross_origin_write_blocked(self):
+        from urllib.error import HTTPError
+        request = Request(self.base + "/api/db/backup", data=b"",
+                          headers={"Origin": "https://evil.example"}, method="POST")
+        with self.assertRaises(HTTPError) as exc:
+            urlopen(request)
+        self.assertEqual(exc.exception.code, 403)
+
     def test_browser_fallback(self):
         from app import server as app_server
         with patch.object(app_server.sys, "platform", "win32"):
