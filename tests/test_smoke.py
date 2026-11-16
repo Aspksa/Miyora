@@ -241,6 +241,21 @@ class MiyoraTests(unittest.TestCase):
                         'function kbOpenFile', 'function kbRunSearch'):
             self.assertIn(element, page)
 
+    def test_minimal_knowledge_layout(self):
+        with urlopen(self.base + "/") as response:
+            page = response.read().decode("utf-8")
+        self.assertIn('id="kb-advanced"', page)
+        self.assertIn('<summary>Дополнительно', page)
+        self.assertIn('id="kb-global-query"', page)
+        self.assertIn('id="kb-preview-code"', page)
+        workspace = page.split('<div class="kb-workspace">', 1)[1].split('<details class="kb-advanced"', 1)[0]
+        self.assertIn('id="kb-tree"', workspace)
+        self.assertIn('id="db-form"', workspace)
+        self.assertNotIn('class="kb-data-section"', workspace)
+        advanced = page.split('<details class="kb-advanced"', 1)[1]
+        self.assertIn('id="kb-tables"', advanced)
+        self.assertIn('id="kb-dbsize"', advanced)
+
     def test_homepage(self):
         with urlopen(self.base + "/") as response:
             self.assertIn(b"Miyora", response.read())
