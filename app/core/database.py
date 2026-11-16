@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from contextlib import closing
 from datetime import datetime, timezone
 import sqlite3
 import sys
@@ -21,7 +22,7 @@ def connect() -> sqlite3.Connection:
     return db
 
 def initialize() -> None:
-    with connect() as db:
+    with closing(connect()) as db, db:
         db.executescript("""
             CREATE TABLE IF NOT EXISTS schema_migrations (
                 version INTEGER PRIMARY KEY,
@@ -49,13 +50,13 @@ def initialize() -> None:
         db.execute("INSERT OR IGNORE INTO schema_migrations(version) VALUES (2)")
 
 def health() -> dict:
-    with connect() as db:
+    with closing(connect()) as db, db:
         result = db.execute("PRAGMA integrity_check").fetchone()[0]
         return {"status": "ok" if result == "ok" else "error", "engine": "sqlite",
                 "schema_version": db.execute("SELECT max(version) FROM schema_migrations").fetchone()[0]}
 
 def list_notes(limit: int = 100, search: str = "", include_deleted: bool = False) -> list[dict]:
-    with connect() as db:
+    with closing(connect()) as db, db:
         return [dict(row) for row in db.execute(
             "SELECT id,title,content,created_at,updated_at,deleted_at FROM notes "
             "WHERE (? OR deleted_at IS NULL) AND (title LIKE ? OR content LIKE ?) "
@@ -67,16 +68,16 @@ def create_note(title: str, content: str = "") -> dict:
         raise ValueError("title must be 1-200 characters")
     if not isinstance(content, str) or len(content) > 100000:
         raise ValueError("content must be a string of at most 100000 characters")
-    with connect() as db:
+    with closing(connect()) as db, db:
         cursor = db.execute("INSERT INTO notes(title,content) VALUES (?,?)", (title.strip(), content))
         return dict(db.execute("SELECT * FROM notes WHERE id=?", (cursor.lastrowid,)).fetchone())
 
 def delete_note(note_id: int) -> bool:
-    with connect() as db:
+    with closing(connect()) as db, db:
         return db.execute("UPDATE notes SET deleted_at=CURRENT_TIMESTAMP WHERE id=? AND deleted_at IS NULL", (note_id,)).rowcount > 0
 
 def restore_note(note_id: int) -> bool:
-    with connect() as db:
+    with closing(connect()) as db, db:
         return db.execute("UPDATE notes SET deleted_at=NULL WHERE id=? AND deleted_at IS NOT NULL", (note_id,)).rowcount > 0
 
 def update_note(note_id: int, title: str, content: str = "") -> dict | None:
@@ -84,13 +85,13 @@ def update_note(note_id: int, title: str, content: str = "") -> dict | None:
         raise ValueError("title must be 1-200 characters")
     if not isinstance(content, str) or len(content) > 100000:
         raise ValueError("content must be a string of at most 100000 characters")
-    with connect() as db:
+    with closing(connect()) as db, db:
         changed = db.execute("UPDATE notes SET title=?,content=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND deleted_at IS NULL",
                              (title.strip(), content, note_id)).rowcount
         return dict(db.execute("SELECT * FROM notes WHERE id=?", (note_id,)).fetchone()) if changed else None
 
 def stats() -> dict:
-    with connect() as db:
+    with closing(connect()) as db, db:
         return {"total": db.execute("SELECT count(*) FROM notes WHERE deleted_at IS NULL").fetchone()[0],
                 "deleted": db.execute("SELECT count(*) FROM notes WHERE deleted_at IS NOT NULL").fetchone()[0],
                 "bytes": DB_PATH.stat().st_size if DB_PATH.exists() else 0,
@@ -109,7 +110,7 @@ def backup(destination: str | Path | None = None) -> Path:
         raise FileExistsError(target)
     target.parent.mkdir(parents=True, exist_ok=True)
     try:
-        with connect() as source, sqlite3.connect(str(target)) as output:
+        with closing(connect()) as source, closing(sqlite3.connect(str(target))) as output, output:
             source.backup(output)
             if output.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                 raise sqlite3.DatabaseError("Backup integrity check failed")
@@ -123,7 +124,7 @@ def restore_backup(source: str | Path) -> Path:
     source = Path(source).resolve()
     if not source.is_file() or source == DB_PATH.resolve():
         raise ValueError("Provide a separate existing SQLite backup")
-    with sqlite3.connect(f"file:{source.as_posix()}?mode=ro", uri=True) as candidate:
+    with closing(sqlite3.connect(f"file:{source.as_posix()}?mode=ro", uri=True)) as candidate:
         if candidate.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
             raise sqlite3.DatabaseError("Backup integrity check failed")
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -135,9 +136,9 @@ def restore_backup(source: str | Path) -> Path:
     if stage.exists():
         raise FileExistsError(stage)
     try:
-        with sqlite3.connect(str(source)) as input_db, sqlite3.connect(str(stage)) as output:
+        with closing(sqlite3.connect(str(source))) as input_db, closing(sqlite3.connect(str(stage))) as output, output:
             input_db.backup(output)
-        with sqlite3.connect(str(stage)) as verified:
+        with closing(sqlite3.connect(str(stage))) as verified:
             if verified.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                 raise sqlite3.DatabaseError("Restored database failed integrity check")
         stage.replace(DB_PATH)
