@@ -196,8 +196,8 @@ class MiyoraTests(unittest.TestCase):
         from urllib.error import HTTPError
         root = Path(self.temp.name) / "search-fixtures"
         root.mkdir(exist_ok=True)
-        (root / "hello.py").write_text("def hello():\\n    return 'УникальныйПоиск'\\n", encoding="utf-8")
-        (root / "secret.bin").write_bytes(b"\\x00\\x01")
+        (root / "hello.py").write_text("def hello():\n    return 'УникальныйПоиск'\n", encoding="utf-8")
+        (root / "secret.bin").write_bytes(b"\x00\x01")
         (root / ".env").write_text("УникальныйПоиск=secret", encoding="utf-8")
         result = file_search.preview(root, "hello.py")
         self.assertIn("УникальныйПоиск", result["content"])
