@@ -19,7 +19,11 @@ if errorlevel 1 (
   echo [ERROR] Windows PowerShell is required.
   goto :failed
 )
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0launcher.ps1" %*
+if /I "%~1"=="--doctor" (
+  powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0launcher.ps1" -Doctor
+) else (
+  powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0launcher.ps1"
+)
 set "MIYORA_EXIT=%ERRORLEVEL%"
 if "%MIYORA_EXIT%"=="0" (
   popd
