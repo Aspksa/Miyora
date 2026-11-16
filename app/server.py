@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from app.core import database, explorer, file_search, cloudru
+from app.core import database, explorer, file_search, cloudru, chat
 import os
 import socket
 import sys
@@ -203,6 +203,19 @@ class MiyoraHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         if not self._trusted_write():
+            return
+        if urlsplit(self.path).path == "/api/chat":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                if not 0 < length <= 400000:
+                    self.send_json(413, {"error": "invalid_body_size"})
+                    return
+                body = json.loads(self.rfile.read(length).decode("utf-8"))
+                if not isinstance(body, dict) or set(body) != {"messages"}:
+                    raise ValueError("invalid_chat_request")
+                self.send_json(200, chat.complete(body["messages"]))
+            except (ValueError, UnicodeError, json.JSONDecodeError, cloudru.CloudError) as exc:
+                self.send_json(400, {"error": str(exc)})
             return
         if urlsplit(self.path).path == "/api/settings/cloudru":
             try:
