@@ -345,6 +345,47 @@ class MiyoraTests(unittest.TestCase):
         self.assertIn('/api/status/connections/check', page)
         self.assertIn('Cloud.ru API', page)
 
+    def test_chat_ui(self):
+        with urlopen(self.base + "/") as response:
+            page = response.read().decode("utf-8")
+        for token in ('id="chat-app"', 'id="chat-form"', 'id="chat-input"',
+                      'id="chat-new"', 'id="chat-messages"', '/api/chat'):
+            self.assertIn(token, page)
+
+    def test_chat_endpoint_validation_and_completion(self):
+        from app.core import cloudru, chat
+        from urllib.error import HTTPError
+        def post(messages):
+            data = json.dumps({"messages": messages}).encode("utf-8")
+            request = Request(self.base + "/api/chat", data=data,
+                              headers={"Content-Type": "application/json"})
+            return urlopen(request)
+        with self.assertRaises(HTTPError) as error:
+            post([{"role": "system", "content": "bad"}])
+        self.assertEqual(error.exception.code, 400)
+        cloudru.clear_key()
+        with self.assertRaises(HTTPError) as error:
+            post([{"role": "user", "content": "Hello"}])
+        self.assertEqual(error.exception.code, 400)
+        cloudru.save_key("test-chat-api-key")
+        cloudru.set_model("test-chat-model")
+        try:
+            class FakeResponse:
+                def __enter__(self): return self
+                def __exit__(self, *args): return False
+                def read(self, *_): return b'{"choices":[{"message":{"content":"Hello from model"}}]}'
+            with patch.object(chat, "urlopen", return_value=FakeResponse()) as mocked:
+                with post([{"role": "user", "content": "Hello"}]) as response:
+                    result = json.load(response)
+                self.assertEqual(result["message"], "Hello from model")
+                self.assertEqual(result["model"], "test-chat-model")
+                upstream = mocked.call_args.args[0]
+                self.assertEqual(upstream.full_url, cloudru.BASE_URL + "/chat/completions")
+                self.assertEqual(upstream.get_header("Authorization"), "Bearer test-chat-api-key")
+        finally:
+            cloudru.clear_key()
+            cloudru.set_model("")
+
     def test_homepage(self):
         with urlopen(self.base + "/") as response:
             self.assertIn(b"Miyora", response.read())
