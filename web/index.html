@@ -421,6 +421,9 @@ header .right .home-status-dot{margin-left:2px}
 .neural-controls button{border-radius:9px;color:var(--mz-text)}
 .neural-bottom{background:color-mix(in srgb,var(--mz-surface) 86%,transparent);border-color:var(--mz-border)}
 .neural-inspector{background:color-mix(in srgb,var(--mz-surface) 80%,transparent);backdrop-filter:blur(14px);border-color:var(--mz-border);color:var(--mz-text);border-radius:12px}
+.neural-panel[data-mz-theme="gold"] #neural-canvas{filter:hue-rotate(135deg) saturate(.8)}
+.neural-panel[data-mz-theme="amber"] #neural-canvas{filter:hue-rotate(160deg) saturate(1.2)}
+.neural-panel[data-mz-theme="jade"] #neural-canvas{filter:hue-rotate(-15deg) saturate(1.05)}
 .neural-theme-picker{max-width:112px;min-width:0;padding:7px 9px;background:var(--mz-surface);border:1px solid var(--mz-border);border-radius:9px;color:var(--mz-text);font:600 11px system-ui;cursor:pointer}
 .neural-theme-picker:focus-visible{outline:2px solid var(--mz-accent);outline-offset:2px}
 @media(max-width:690px){.neural-theme-picker{max-width:85px;padding:5px}.neural-modebar{gap:4px}}
@@ -1026,6 +1029,17 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  const $=id=>document.getElementById(id);
  const canvas=$('neural-canvas'),viewport=$('neural-viewport'),ctx=canvas.getContext('2d');
  if(!ctx)return;
+ const themeSelect=$('neural-theme'),themePanel=viewport.closest('.neural-panel');
+ const allowedThemes=new Set(['dark','gold','amber','jade']);
+ let savedTheme='dark';
+ try{savedTheme=localStorage.getItem('miyora-neural-theme')||'dark'}catch(_){}
+ if(!allowedThemes.has(savedTheme))savedTheme='dark';
+ themeSelect.value=savedTheme;themePanel.dataset.mzTheme=savedTheme;
+ themeSelect.addEventListener('change',()=>{
+  const theme=allowedThemes.has(themeSelect.value)?themeSelect.value:'dark';
+  themePanel.dataset.mzTheme=theme;
+  try{localStorage.setItem('miyora-neural-theme',theme)}catch(_){}
+ });
  let graph={nodes:[],edges:[]},positions=[],threadId=null,requestVersion=0;
  let zoom=1,panX=0,panY=0,width=1,height=1,dpr=1,selected=null,active=false,raf=0;
  let pointer=null,dragged=false,clock=0,mode='radial',activityStage='idle',lastRefresh=0,transition=null,hovered=null,rotation=0;
