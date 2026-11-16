@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from contextlib import closing
 import sqlite3
 from pathlib import Path
 from app.core import database
@@ -53,7 +54,7 @@ def overview(root: Path) -> dict:
             "database": database.stats()}
 
 def tables() -> list[dict]:
-    with database.connect() as db:
+    with closing(database.connect()) as db:
         names = [r[0] for r in db.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")]
         output = []
@@ -67,7 +68,7 @@ def tables() -> list[dict]:
 def table_rows(name: str, offset: int = 0, limit: int = 30) -> dict:
     if not isinstance(name, str) or len(name) > 128:
         raise ValueError("invalid table")
-    with database.connect() as db:
+    with closing(database.connect()) as db:
         allowed = {r[0] for r in db.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
         if name not in allowed:
