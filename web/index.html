@@ -37,13 +37,33 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
 .db-row{padding:12px 0;border-top:1px solid #262626;display:flex;justify-content:space-between;gap:12px;align-items:center}
 .db-row strong{display:block;overflow-wrap:anywhere}.db-row small{color:#888}
 .db-row button{padding:6px 9px}.db-msg{font-size:12px;color:#aaa;min-height:20px}
+
+/* Knowledge workspace: scalable, movable, keyboard accessible */
+.kb-launch{display:inline-flex;align-items:center;gap:9px;border:1px solid #464657;border-radius:13px;padding:10px 14px;color:#f5f4ff;background:linear-gradient(140deg,#29293b,#16161f);box-shadow:inset 0 1px #ffffff25,0 6px 24px #0005;cursor:pointer;font:600 12px inherit;transition:transform .18s,border-color .18s}
+.kb-launch:hover{transform:translateY(-2px);border-color:#a6a0e8}.kb-launch:focus-visible,.kb-window button:focus-visible{outline:2px solid #b9afff;outline-offset:3px}
+.kb-launch svg{width:21px;height:21px;flex:none;stroke:#c8c0ff}
+.kb-layer[hidden]{display:none}.kb-layer{position:fixed;inset:0;z-index:1000;pointer-events:none}
+.kb-shade{position:absolute;inset:0;background:#0009;pointer-events:auto}
+.kb-window{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,calc(100vw - 32px));height:min(580px,calc(100dvh - 32px));min-width:300px;min-height:260px;max-width:100vw;max-height:100dvh;display:flex;flex-direction:column;overflow:hidden;resize:both;border:1px solid #474558;border-radius:20px;background:#111116;box-shadow:0 28px 100px #000c,0 0 0 1px #ffffff09;pointer-events:auto}
+.kb-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #292833;background:linear-gradient(110deg,#222135,#14141a);cursor:grab;touch-action:none;user-select:none}
+.kb-head:active{cursor:grabbing}.kb-title{display:flex;align-items:center;gap:11px;min-width:0}.kb-title svg{width:30px;height:30px;stroke:#c8c0ff;flex:none}
+.kb-title strong{display:block;font-size:15px}.kb-title small{display:block;color:#9c99b0;font-size:11px;margin-top:3px}
+.kb-close{flex:none;background:#ffffff0b;border:1px solid #ffffff1a;border-radius:10px;color:#ddd;width:34px;height:34px;font-size:21px;cursor:pointer}
+.kb-content{min-height:0;flex:1;overflow:auto;padding:clamp(16px,3vw,26px);container-type:inline-size}
+.kb-intro{color:#aaa8bb;font-size:13px;line-height:1.6;margin:0 0 22px}
+.kb-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,195px),1fr));gap:12px}
+.kb-card{border:1px solid #30303e;border-radius:15px;padding:18px;background:linear-gradient(155deg,#1f1e2b,#16161d);min-width:0}
+.kb-card svg{width:25px;height:25px;stroke:#aaa3ff;margin-bottom:12px}.kb-card h3{font-size:14px;margin:0 0 8px}.kb-card p{font-size:12px;line-height:1.6;color:#a3a0b3;margin:0}
+.kb-foot{padding:12px 20px;border-top:1px solid #292833;color:#89859e;font-size:11px;display:flex;justify-content:space-between;gap:12px}
+@media(max-width:600px){header{padding:0 14px}.kb-launch{padding:9px}.kb-launch span{display:none}.kb-window{min-width:0;width:calc(100vw - 16px);height:min(640px,calc(100dvh - 16px));border-radius:15px}.kb-head{padding:12px 14px}.kb-foot{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.kb-launch{transition:none}}
 </style>
 </head>
 <body>
 <div class="shell">
 <header>
   <div class="brand"><span class="mark" aria-hidden="true">M</span><span>Miyora</span></div>
-  <div class="right"><span class="indicator" id="indicator" aria-hidden="true"></span><span id="status">Локальный режим</span></div>
+  <div class="right"><button type="button" class="kb-launch" id="kb-open" aria-haspopup="dialog" aria-controls="kb-layer"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5.5C9.4 3.8 6.5 3.8 3 5v13.5c3.5-1.2 6.4-1.2 9 0.5 2.6-1.7 5.5-1.7 9-.5V5c-3.5-1.2-6.4-1.2-9 .5Z"/><path d="M12 5.5V19"/><path d="m16.5 9 1 1 2-2"/></svg><span>База знаний</span></button><span class="indicator" id="indicator" aria-hidden="true"></span><span id="status">Локальный режим</span></div>
 </header>
 <main>
   <div class="center">
@@ -72,6 +92,24 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
   <div id="db-list" aria-live="polite"></div>
 </section>
 <footer><span>© Miyora</span><span>Версия 0.2 · Локальное приложение</span></footer>
+</div>
+<div id="kb-layer" class="kb-layer" hidden>
+  <div class="kb-shade" id="kb-shade"></div>
+  <section class="kb-window" id="kb-window" role="dialog" aria-modal="true" aria-labelledby="kb-heading" tabindex="-1">
+    <div class="kb-head" id="kb-handle">
+      <div class="kb-title"><svg viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 7C12 4.5 8 4.5 4 6v19c4-1.5 8-1.5 12 1 4-2.5 8-2.5 12-1V6c-4-1.5-8-1.5-12 1Z"/><path d="M16 7v19"/><path d="m21 12 2 2 4-4"/></svg><div><strong id="kb-heading">База знаний</strong><small>Личное пространство Miyora</small></div></div>
+      <button type="button" class="kb-close" id="kb-close" aria-label="Закрыть базу знаний">×</button>
+    </div>
+    <div class="kb-content">
+      <p class="kb-intro">Здесь будет собрана ваша база знаний: заметки, материалы, коллекции и связанные идеи. Окно можно перемещать за верхнюю панель и изменять его размер за правый нижний угол.</p>
+      <div class="kb-cards">
+        <article class="kb-card"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><h3>Заметки</h3><p>Место для записей, мыслей и полезной информации.</p></article>
+        <article class="kb-card"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M3 7h7l2 2h9v11H3z"/><path d="M3 7V5h8l2 2"/></svg><h3>Коллекции</h3><p>Организация материалов по темам и проектам.</p></article>
+        <article class="kb-card"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="m8 7 3 9m5-9-3 9M8 6h8"/></svg><h3>Связи</h3><p>Будущая карта взаимосвязанных знаний и идей.</p></article>
+      </div>
+    </div>
+    <div class="kb-foot"><span>MIYORA / KNOWLEDGE</span><span>Перетащите заголовок · Измените размер ↘</span></div>
+  </section>
 </div>
 <script>
 (async()=>{try{const r=await fetch('/api/health',{cache:'no-store'});if(!r.ok) return;const data=await r.json();if(data.status==='ok'){document.getElementById('indicator').classList.add('online');document.getElementById('status').textContent='Система активна';}}catch{}})();
@@ -127,6 +165,48 @@ $('db-search').oninput=()=>refreshNotes();
 $('db-trash').onclick=()=>{trash=!trash;$('db-trash').textContent=trash?'Все заметки':'Корзина';refreshNotes()};
 $('db-backup').onclick=async()=>{try{const r=await api('/api/db/backup','POST');message('Резервная копия: '+r.backup)}catch(e){message('Ошибка копирования: '+e.message)}};
 refreshNotes();
+
+(function(){
+  const layer=document.getElementById('kb-layer'),win=document.getElementById('kb-window');
+  const open=document.getElementById('kb-open'),close=document.getElementById('kb-close'),handle=document.getElementById('kb-handle');
+  let previous=null,drag=null;
+  function show(){previous=document.activeElement;layer.hidden=false;win.focus()}
+  function hide(){layer.hidden=true;drag=null;if(previous&&previous.focus)previous.focus()}
+  open.addEventListener('click',show);
+  close.addEventListener('click',hide);
+  document.getElementById('kb-shade').addEventListener('click',hide);
+  document.addEventListener('keydown',e=>{
+    if(layer.hidden)return;
+    if(e.key==='Escape'){e.preventDefault();hide();return}
+    if(e.key==='Tab'){
+      const items=[close];const target=items[0];
+      if(e.shiftKey||document.activeElement===target){e.preventDefault();target.focus()}
+    }
+  });
+  handle.addEventListener('pointerdown',e=>{
+    if(e.button!==0||e.target.closest('button'))return;
+    const r=win.getBoundingClientRect();
+    drag={x:e.clientX-r.left,y:e.clientY-r.top};
+    win.style.left=r.left+'px';win.style.top=r.top+'px';win.style.transform='none';
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener('pointermove',e=>{
+    if(!drag)return;
+    const r=win.getBoundingClientRect();
+    win.style.left=Math.max(0,Math.min(innerWidth-r.width,e.clientX-drag.x))+'px';
+    win.style.top=Math.max(0,Math.min(innerHeight-r.height,e.clientY-drag.y))+'px';
+  });
+  function end(){drag=null}
+  handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);
+  addEventListener('resize',()=>{
+    if(layer.hidden)return;
+    const r=win.getBoundingClientRect();
+    if(win.style.transform==='none'){
+      win.style.left=Math.max(0,Math.min(innerWidth-r.width,r.left))+'px';
+      win.style.top=Math.max(0,Math.min(innerHeight-r.height,r.top))+'px';
+    }
+  });
+})();
 </script>
 </body>
 </html>
