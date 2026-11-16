@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
 DB_PATH = Path(os.environ.get("MIYORA_DB_PATH") or ROOT / "data" / "miyora.db").expanduser()
 
 def connect() -> sqlite3.Connection:
