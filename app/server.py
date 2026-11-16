@@ -31,6 +31,21 @@ def configure_logging() -> None:
     logging.basicConfig(filename=str(LOG_PATH), level=logging.INFO, encoding="utf-8",
                         format="%(asctime)s %(levelname)s %(message)s")
 
+def open_browser(url: str) -> bool:
+    """Prefer the Windows default browser; fall back to Python's browser module."""
+    if sys.platform == "win32":
+        try:
+            os.startfile(url)
+            return True
+        except OSError:
+            logging.exception("Windows default browser launch failed")
+    try:
+        return bool(webbrowser.open(url, new=2))
+    except Exception:
+        logging.exception("Python browser launch failed")
+        return False
+
+
 def verify_and_open(url: str) -> None:
     for _ in range(30):
         try:
@@ -38,13 +53,9 @@ def verify_and_open(url: str) -> None:
                 if response.status == 200 and json.load(response).get("status") == "ok":
                     logging.info("HTTP health check passed: %s", url)
                     print("[INFO] HTTP health check passed.", flush=True)
-                    for _ in range(2):
-                        try:
-                            if webbrowser.open(url, new=2):
-                                return
-                        except Exception:
-                            logging.exception("Browser launch failed")
-                        time.sleep(1)
+                    if open_browser(url):
+                        print("[INFO] Browser open requested: " + url, flush=True)
+                        return
                     print("[WARN] Open manually: " + url, flush=True)
                     logging.warning("Could not open browser: %s", url)
                     return
@@ -69,7 +80,11 @@ class MiyoraHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         route = urlsplit(self.path).path
         if route in ("/", "/index.html"):
-            self.send_bytes(200, PAGE_PATH.read_bytes(), "text/html; charset=utf-8")
+            try:
+                self.send_bytes(200, PAGE_PATH.read_bytes(), "text/html; charset=utf-8")
+            except OSError:
+                logging.exception("Web interface not found: %s", PAGE_PATH)
+                self.send_json(503, {"error": "web_interface_unavailable"})
         elif route in ("/api/health", "/api/status"):
             result = {
                 "name": APP_NAME,
