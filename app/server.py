@@ -24,6 +24,7 @@ ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) el
 HOST = "127.0.0.1"
 
 PAGE_PATH = Path(getattr(sys, "_MEIPASS", ROOT)) / "web" / "index.html"
+FAVICON_PATH = PAGE_PATH.with_name("favicon.svg")
 LOG_PATH = ROOT / "data" / "miyora.log"
 
 def configure_logging() -> None:
@@ -85,6 +86,11 @@ class MiyoraHandler(BaseHTTPRequestHandler):
             except OSError:
                 logging.exception("Web interface not found: %s", PAGE_PATH)
                 self.send_json(503, {"error": "web_interface_unavailable"})
+        elif route in ("/favicon.svg", "/favicon.ico"):
+            try:
+                self.send_bytes(200, FAVICON_PATH.read_bytes(), "image/svg+xml")
+            except OSError:
+                self.send_bytes(204, b"", "image/svg+xml")
         elif route in ("/api/health", "/api/status"):
             result = {
                 "name": APP_NAME,
