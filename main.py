@@ -18,54 +18,7 @@ VERSION = "0.2.0"
 ROOT = Path(__file__).resolve().parent
 HOST = "127.0.0.1"
 
-PAGE = """<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Miyora — Ядро</title>
-<style>
-:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-*{box-sizing:border-box}body{margin:0;background:#0c1020;color:#eaf0ff;min-height:100vh;display:grid;place-items:center;padding:24px}
-main{width:min(680px,100%);background:#171d31;border:1px solid #303b59;border-radius:20px;padding:32px;box-shadow:0 15px 55px #0005}
-h1{font-size:clamp(32px,6vw,48px);margin:0 0 8px}p{line-height:1.6;color:#bac7e4}
-.status{display:inline-flex;gap:9px;align-items:center;color:#9df5c6;font-weight:650}
-.dot{width:10px;height:10px;border-radius:50%;background:#45dc93}
-dl{display:grid;grid-template-columns:auto 1fr;gap:12px;margin:26px 0}
-dt{color:#93a6ce}dd{margin:0;overflow-wrap:anywhere}
-button{background:#6389ff;border:0;border-radius:10px;padding:12px 18px;color:#fff;font:inherit;cursor:pointer}
-button:hover{background:#7a9bff}small{color:#91a0c1}
-</style>
-</head>
-<body>
-<main>
-<div class="status"><span class="dot"></span><span id="state">Проверка ядра…</span></div>
-<h1>Miyora</h1>
-<p>Локальное ядро запущено. Сервер работает на вашем компьютере, а интерфейс поддерживает русский язык и UTF-8.</p>
-<dl>
-<dt>Версия</dt><dd id="version">—</dd>
-<dt>Время UTC</dt><dd id="time">—</dd>
-<dt>API</dt><dd><code>/api/health</code></dd>
-</dl>
-<button id="refresh">Обновить состояние</button>
-<p><small>Базовое ядро · Python · HTTP API</small></p>
-</main>
-<script>
-async function refresh(){
-  try{
-    const response=await fetch('/api/health',{cache:'no-store'});
-    if(!response.ok)throw new Error('HTTP '+response.status);
-    const data=await response.json();
-    document.getElementById('state').textContent=data.status==='ok'?'Ядро работает':'Ошибка состояния';
-    document.getElementById('version').textContent=data.version;
-    document.getElementById('time').textContent=data.timestamp;
-  }catch(error){document.getElementById('state').textContent='Нет связи с ядром';}
-}
-document.getElementById('refresh').addEventListener('click',refresh);
-refresh();
-</script>
-</body>
-</html>"""
+PAGE_PATH = ROOT / "index.html"
 
 
 class MiyoraHandler(BaseHTTPRequestHandler):
@@ -83,7 +36,7 @@ class MiyoraHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         route = urlsplit(self.path).path
         if route in ("/", "/index.html"):
-            self.send_bytes(200, PAGE.encode("utf-8"), "text/html; charset=utf-8")
+            self.send_bytes(200, PAGE_PATH.read_bytes(), "text/html; charset=utf-8")
         elif route in ("/api/health", "/api/status"):
             result = {
                 "name": APP_NAME,
