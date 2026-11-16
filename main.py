@@ -20,10 +20,10 @@ from urllib.parse import urlsplit
 
 APP_NAME = "Miyora"
 VERSION = "0.2.0"
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
 HOST = "127.0.0.1"
 
-PAGE_PATH = ROOT / "index.html"
+PAGE_PATH = Path(getattr(sys, "_MEIPASS", ROOT)) / "index.html"
 LOG_PATH = ROOT / "data" / "miyora.log"
 
 def configure_logging() -> None:
