@@ -16,7 +16,7 @@ from urllib.request import urlopen
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs
 
 APP_NAME = "Miyora"
 VERSION = "0.2.0"
@@ -105,9 +105,12 @@ class MiyoraHandler(BaseHTTPRequestHandler):
                 self.send_json(200, database.health())
             except sqlite3.Error:
                 self.send_json(503, {"error": "database_unavailable"})
+        elif route == "/api/db/stats":
+            self.send_json(200, database.stats())
         elif route == "/api/notes":
             try:
-                self.send_json(200, {"notes": database.list_notes()})
+                params = parse_qs(urlsplit(self.path).query)
+                self.send_json(200, {"notes": database.list_notes(search=params.get("search", [""])[0][:200], include_deleted=params.get("deleted", ["0"])[0] == "1")})
             except sqlite3.Error:
                 self.send_json(503, {"error": "database_unavailable"})
         else:
@@ -118,6 +121,20 @@ class MiyoraHandler(BaseHTTPRequestHandler):
                         "application/json; charset=utf-8")
 
     def do_POST(self) -> None:
+        if urlsplit(self.path).path == "/api/db/backup":
+            try:
+                self.send_json(201, {"backup": str(database.backup())})
+            except (OSError, sqlite3.Error, ValueError):
+                logging.exception("Backup failed")
+                self.send_json(500, {"error": "backup_failed"})
+            return
+        if urlsplit(self.path).path.startswith("/api/notes/") and urlsplit(self.path).path.endswith("/restore"):
+            try:
+                note_id = int(urlsplit(self.path).path.split("/")[3])
+                self.send_json(200, {"restored": database.restore_note(note_id)})
+            except (ValueError, sqlite3.Error):
+                self.send_json(400, {"error": "invalid_id"})
+            return
         if urlsplit(self.path).path != "/api/notes":
             self.send_json(404, {"error": "not_found"})
             return
@@ -135,6 +152,24 @@ class MiyoraHandler(BaseHTTPRequestHandler):
             self.send_json(400, {"error": "invalid_request", "detail": str(exc)})
         except sqlite3.Error:
             self.send_json(503, {"error": "database_unavailable"})
+
+    def do_PUT(self) -> None:
+        route = urlsplit(self.path).path
+        if not route.startswith("/api/notes/"):
+            self.send_json(404, {"error": "not_found"})
+            return
+        try:
+            note_id = int(route.removeprefix("/api/notes/"))
+            length = int(self.headers.get("Content-Length", "0"))
+            if note_id <= 0 or not 0 < length <= 120000:
+                raise ValueError("invalid request")
+            body = json.loads(self.rfile.read(length).decode("utf-8"))
+            if not isinstance(body, dict):
+                raise ValueError("expected JSON object")
+            note = database.update_note(note_id, body.get("title"), body.get("content", ""))
+            self.send_json(200 if note else 404, note or {"error": "not_found"})
+        except (ValueError, UnicodeDecodeError, sqlite3.Error):
+            self.send_json(400, {"error": "invalid_request"})
 
     def do_DELETE(self) -> None:
         route = urlsplit(self.path).path
