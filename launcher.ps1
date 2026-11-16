@@ -33,7 +33,7 @@ try {
       $child = Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'main.py') -PathType Leaf } | Select-Object -First 1
       if ($child) { $appDir = $child.FullName }
     }
-    foreach ($name in @('main.py', 'database.py', 'index.html')) {
+    foreach ($name in @('main.py', 'app/server.py', 'app/core/database.py', 'web/index.html')) {
       if (-not (Test-Path -LiteralPath (Join-Path $appDir $name) -PathType Leaf)) { throw ('Missing application file: ' + $name) }
     }
     # The official Windows embeddable distribution lives inside the project.
