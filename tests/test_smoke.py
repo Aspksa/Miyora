@@ -4,6 +4,7 @@ import os
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 from urllib.request import Request, urlopen
 from http.server import ThreadingHTTPServer
@@ -62,6 +63,23 @@ class MiyoraTests(unittest.TestCase):
         request = Request(self.base + "/api/notes/" + str(note["id"]), method="DELETE")
         with urlopen(request) as response:
             self.assertTrue(json.load(response)["deleted"])
+
+    def test_browser_fallback(self):
+        from app import server as app_server
+        with patch.object(app_server.sys, "platform", "win32"):
+            with patch.object(app_server.os, "startfile", create=True, side_effect=OSError("blocked")):
+                with patch.object(app_server.webbrowser, "open", return_value=True) as fallback:
+                    self.assertTrue(app_server.open_browser("http://127.0.0.1:8000/"))
+                    fallback.assert_called_once()
+
+    def test_browser_windows_default(self):
+        from app import server as app_server
+        with patch.object(app_server.sys, "platform", "win32"):
+            with patch.object(app_server.os, "startfile", create=True) as start:
+                with patch.object(app_server.webbrowser, "open") as fallback:
+                    self.assertTrue(app_server.open_browser("http://127.0.0.1:8000/"))
+                    start.assert_called_once()
+                    fallback.assert_not_called()
 
     def test_homepage(self):
         with urlopen(self.base + "/") as response:
