@@ -398,6 +398,37 @@ header .right .home-status-dot{margin-left:2px}
 #neural-inspector-text{max-height:90px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
 #neural-inspector-open{margin-top:9px;border:1px solid #43756e;border-radius:6px;padding:6px 10px;background:#1b4342;color:#e3f4ec;cursor:pointer}
 @media(max-width:690px){.neural-modebar{padding:5px 8px}.neural-mode{font-size:10px;padding:5px}.neural-inspector{max-height:90px;overflow:auto}}
+
+/* Mizuyori design language: themes, frosted panels, compact controls and typography.
+   Adapted from Aspksa/Mizuyori mizuyori/static/style.css. */
+.neural-panel{--mz-bg:#070708;--mz-surface:#121214;--mz-text:#ececef;--mz-muted:#9a9aa6;--mz-accent:#d6d8de;--mz-border:#29292e;
+ background:radial-gradient(ellipse at 48% 48%,color-mix(in srgb,var(--mz-accent) 9%,var(--mz-bg)),var(--mz-bg) 75%);
+ color:var(--mz-text);font-family:Inter,"Segoe UI",system-ui,sans-serif}
+.neural-panel[data-mz-theme="gold"]{--mz-bg:#0f0d08;--mz-surface:#1a160d;--mz-text:#f4ecd6;--mz-muted:#b5a884;--mz-accent:#d4af37;--mz-border:#3a3120}
+.neural-panel[data-mz-theme="amber"]{--mz-bg:#170d05;--mz-surface:#24150a;--mz-text:#fbe8d2;--mz-muted:#c7a37a;--mz-accent:#ffa62b;--mz-border:#4a2f17}
+.neural-panel[data-mz-theme="jade"]{--mz-bg:#06120e;--mz-surface:#0d1e18;--mz-text:#dcf2e8;--mz-muted:#94b8a9;--mz-accent:#3fbf8f;--mz-border:#1e3a2f}
+.neural-header{border-color:var(--mz-border);background:color-mix(in srgb,var(--mz-surface) 80%,transparent);backdrop-filter:blur(14px)}
+.neural-header h2{color:var(--mz-text);font-weight:650;letter-spacing:-.025em}
+.neural-header p,.neural-bottom,.neural-stats{color:var(--mz-muted)}
+.neural-eyebrow{color:var(--mz-accent)}
+.neural-live{border-color:var(--mz-border);color:var(--mz-accent);background:var(--mz-surface);box-shadow:0 0 12px color-mix(in srgb,var(--mz-accent) 10%,transparent)}
+.neural-modebar{background:color-mix(in srgb,var(--mz-surface) 88%,transparent);border-color:var(--mz-border);padding:12px 16px;gap:6px}
+.neural-mode{background:var(--mz-surface);border:1px solid var(--mz-border);border-radius:10px;color:var(--mz-muted);font-size:11px;transition:background .2s,border-color .2s,transform .2s}
+.neural-mode:hover{border-color:var(--mz-accent);color:var(--mz-text);transform:translateY(-1px)}
+.neural-mode.active,.neural-mode[aria-pressed=true]{background:color-mix(in srgb,var(--mz-accent) 18%,var(--mz-surface));color:var(--mz-text);border-color:var(--mz-accent)}
+.neural-canvas-wrap{background:radial-gradient(ellipse at center,color-mix(in srgb,var(--mz-accent) 7%,transparent),transparent 70%)}
+.neural-controls{background:color-mix(in srgb,var(--mz-surface) 65%,transparent);backdrop-filter:blur(16px);border:1px solid var(--mz-border);border-radius:14px;padding:5px}
+.neural-controls button{border-radius:9px;color:var(--mz-text)}
+.neural-bottom{background:color-mix(in srgb,var(--mz-surface) 86%,transparent);border-color:var(--mz-border)}
+.neural-inspector{background:color-mix(in srgb,var(--mz-surface) 80%,transparent);backdrop-filter:blur(14px);border-color:var(--mz-border);color:var(--mz-text);border-radius:12px}
+.neural-panel[data-mz-theme="gold"] #neural-canvas{filter:hue-rotate(135deg) saturate(.8)}
+.neural-panel[data-mz-theme="amber"] #neural-canvas{filter:hue-rotate(160deg) saturate(1.2)}
+.neural-panel[data-mz-theme="jade"] #neural-canvas{filter:hue-rotate(-15deg) saturate(1.05)}
+.neural-theme-picker{max-width:112px;min-width:0;padding:7px 9px;background:var(--mz-surface);border:1px solid var(--mz-border);border-radius:9px;color:var(--mz-text);font:600 11px system-ui;cursor:pointer}
+.neural-theme-picker:focus-visible{outline:2px solid var(--mz-accent);outline-offset:2px}
+@media(max-width:690px){.neural-theme-picker{max-width:85px;padding:5px}.neural-modebar{gap:4px}}
+@media(prefers-reduced-motion:reduce){.neural-mode{transition:none}.neural-mode:hover{transform:none}}
+
 </style>
 </head>
 <body>
@@ -410,8 +441,8 @@ header .right .home-status-dot{margin-left:2px}
 </div></div>
 </header>
 <main class="chat-layout" id="chat-app">
-  <section class="neural-panel" aria-label="Граф связей диалога">
-    <div class="neural-header"><div><span class="neural-eyebrow">MIYORA / NEURAL WORKSPACE</span><h2>Карта диалога</h2><p>Сообщения и связи из SQLite</p></div><span class="neural-live" id="neural-status">ОЖИДАНИЕ</span></div>
+  <section class="neural-panel" data-mz-theme="dark" aria-label="Граф связей диалога">
+    <div class="neural-header"><div><span class="neural-eyebrow">MIYORA / NEURAL WORKSPACE</span><h2>Карта диалога</h2><p>Сообщения и связи из SQLite</p></div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><label for="neural-theme" class="neural-eyebrow">ТЕМА</label><select class="neural-theme-picker" id="neural-theme" aria-label="Тема графа"><option value="dark">Тёмная</option><option value="gold">Золото</option><option value="amber">Янтарь</option><option value="jade">Нефрит</option></select><span class="neural-live" id="neural-status">ОЖИДАНИЕ</span></div></div>
     <div class="neural-modebar" role="group" aria-label="Режим визуализации"><button type="button" class="neural-mode active" data-neural-mode="radial" aria-pressed="true">Ядро</button><button type="button" class="neural-mode" data-neural-mode="links" aria-pressed="false">Связи</button><button type="button" class="neural-mode" data-neural-mode="hex" aria-pressed="false">Карта</button><button type="button" class="neural-mode" data-neural-mode="overview" aria-pressed="false">Обзор</button><button type="button" class="neural-mode" data-neural-mode="circle" aria-pressed="false">Круг</button><button type="button" class="neural-mode" data-neural-mode="board" aria-pressed="false">Плата</button><button type="button" class="neural-mode" data-neural-mode="hud" aria-pressed="false">HUD</button></div><div class="neural-canvas-wrap" id="neural-viewport"><canvas id="neural-canvas" aria-label="Интерактивный граф сообщений" role="img"></canvas><div class="neural-empty" id="neural-empty">Начните диалог или выберите чат, чтобы увидеть граф сообщений.</div><div class="neural-controls"><button type="button" id="neural-zoom-in" title="Приблизить" aria-label="Приблизить граф">+</button><button type="button" id="neural-zoom-out" title="Отдалить" aria-label="Отдалить граф">−</button><button type="button" id="neural-reset" title="Сбросить вид" aria-label="Сбросить вид">⌖</button></div></div>
     <div class="neural-bottom"><div class="neural-stats"><span id="neural-node-count">0 УЗЛОВ</span><span id="neural-edge-count">0 СВЯЗЕЙ</span><span>КОЛЕСО — МАСШТАБ · ПЕРЕТАСКИВАНИЕ — ОБЗОР</span></div><div class="neural-selected" id="neural-selected" aria-live="polite">Выберите узел, чтобы перейти к сообщению</div><div class="neural-inspector" id="neural-inspector" hidden><div id="neural-inspector-meta"></div><div id="neural-inspector-text"></div><button type="button" id="neural-inspector-open">Перейти к сообщению</button></div><div class="neural-node-list" id="neural-node-list" aria-label="Доступный список узлов графа"></div></div>
   </section>
@@ -998,6 +1029,17 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  const $=id=>document.getElementById(id);
  const canvas=$('neural-canvas'),viewport=$('neural-viewport'),ctx=canvas.getContext('2d');
  if(!ctx)return;
+ const themeSelect=$('neural-theme'),themePanel=viewport.closest('.neural-panel');
+ const allowedThemes=new Set(['dark','gold','amber','jade']);
+ let savedTheme='dark';
+ try{savedTheme=localStorage.getItem('miyora-neural-theme')||'dark'}catch(_){}
+ if(!allowedThemes.has(savedTheme))savedTheme='dark';
+ themeSelect.value=savedTheme;themePanel.dataset.mzTheme=savedTheme;
+ themeSelect.addEventListener('change',()=>{
+  const theme=allowedThemes.has(themeSelect.value)?themeSelect.value:'dark';
+  themePanel.dataset.mzTheme=theme;
+  try{localStorage.setItem('miyora-neural-theme',theme)}catch(_){}
+ });
  let graph={nodes:[],edges:[]},positions=[],threadId=null,requestVersion=0;
  let zoom=1,panX=0,panY=0,width=1,height=1,dpr=1,selected=null,active=false,raf=0;
  let pointer=null,dragged=false,clock=0,mode='radial',activityStage='idle',lastRefresh=0,transition=null,hovered=null,rotation=0;
