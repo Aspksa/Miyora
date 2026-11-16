@@ -538,7 +538,7 @@ class MiyoraTests(unittest.TestCase):
         for token in ('id="mz-panel-toggle"', 'id="mz-floating-panel"',
                       'id="mz-camera-speed"', 'id="mz-signals"',
                       'id="mz-center"', 'targetCamera', 'cameraSpeed',
-                      'signalsEnabled', 'const smooth=reduced?1:cameraSpeed',
+                      'signalsEnabled', 'const smooth=reduced?1:1-Math.exp(-Math.max(.01,cameraSpeed*12)*dt)',
                       'aria-expanded', 'prefers-reduced-motion:reduce'):
             self.assertIn(token, html)
 
