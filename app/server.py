@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from app.core import database, explorer, file_search, cloudru, chat
+from app.core import database, explorer, file_search, cloudru, chat, chat_store
 import os
 import socket
 import sys
@@ -174,6 +174,18 @@ class MiyoraHandler(BaseHTTPRequestHandler):
                 self.send_json(200, cloudru.models())
             except cloudru.CloudError as exc:
                 self.send_json(400, {"error": str(exc)})
+        elif route == "/api/chats" or route.startswith("/api/chats/"):
+            try:
+                chat_store.initialize()
+                if route == "/api/chats":
+                    self.send_json(200, {"threads": chat_store.list_threads()})
+                else:
+                    thread_id = int(route.split("/")[3])
+                    items = chat_store.messages(thread_id)
+                    self.send_json(200 if items is not None else 404,
+                                   {"messages": items} if items is not None else {"error":"not_found"})
+            except (ValueError, sqlite3.Error):
+                self.send_json(400, {"error":"invalid_chat"})
         elif route == "/api/notes":
             try:
                 params = parse_qs(urlsplit(self.path).query)
@@ -203,6 +215,60 @@ class MiyoraHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         if not self._trusted_write():
+            return
+        route=urlsplit(self.path).path
+        if route == "/api/chats" or route.startswith("/api/chats/"):
+            try:
+                chat_store.initialize()
+                length=int(self.headers.get("Content-Length","0"))
+                if not 0 < length <= 400000: raise ValueError("invalid_body_size")
+                body=json.loads(self.rfile.read(length).decode("utf-8"))
+                if not isinstance(body,dict): raise ValueError("invalid_body")
+                if route == "/api/chats":
+                    if set(body)-{"title"}: raise ValueError("invalid_body")
+                    self.send_json(201,chat_store.create_thread(body.get("title","Новый чат")))
+                    return
+                parts=route.strip("/").split("/")
+                if len(parts)!=4 or parts[3]!="stream": raise ValueError("invalid_route")
+                thread_id=int(parts[2])
+                if set(body)!={"messages"}: raise ValueError("invalid_body")
+                incoming=body["messages"]
+                if chat_store.messages(thread_id) is None: raise ValueError("thread_not_found")
+                # Validate before saving or sending streaming response.
+                if not isinstance(incoming,list) or not incoming or len(incoming)>chat.MAX_MESSAGES:
+                    raise ValueError("invalid_messages")
+                for item in incoming:
+                    if not isinstance(item,dict) or set(item)!={"role","content"} or item["role"] not in ("user","assistant") or not isinstance(item["content"],str) or not 1 <= len(item["content"]) <= chat.MAX_CONTENT:
+                        raise ValueError("invalid_messages")
+                if incoming[-1]["role"]!="user": raise ValueError("invalid_messages")
+                stored=chat_store.messages(thread_id)
+                expected=[{"role":m["role"],"content":m["content"]} for m in stored]
+                if incoming[:-1]!=expected[-(len(incoming)-1):] if len(incoming)>1 else bool(expected):
+                    raise ValueError("history_mismatch")
+                chat_store.append(thread_id,"user",incoming[-1]["content"])
+                self.send_response(200)
+                self.send_header("Content-Type","text/event-stream; charset=utf-8")
+                self.send_header("Cache-Control","no-store")
+                self.send_header("X-Content-Type-Options","nosniff")
+                self.end_headers()
+                answer=[]
+                try:
+                    for delta in chat.stream(incoming):
+                        answer.append(delta)
+                        self.wfile.write(("data: "+json.dumps({"delta":delta},ensure_ascii=False)+"\\n\\n").encode("utf-8"))
+                        self.wfile.flush()
+                    if answer: chat_store.append(thread_id,"assistant","".join(answer)[:120000])
+                    self.wfile.write(b"data: [DONE]\\n\\n")
+                    self.wfile.flush()
+                except (cloudru.CloudError,ValueError,OSError) as exc:
+                    if answer: chat_store.append(thread_id,"assistant","".join(answer)[:120000])
+                    try:
+                        self.wfile.write(("data: "+json.dumps({"error":str(exc)})+"\\n\\n").encode("utf-8"))
+                        self.wfile.flush()
+                    except (BrokenPipeError,ConnectionResetError): pass
+                return
+            except (ValueError,UnicodeError,sqlite3.Error) as exc:
+                self.send_json(400,{"error":str(exc)})
             return
         if urlsplit(self.path).path == "/api/chat":
             try:
@@ -271,6 +337,19 @@ class MiyoraHandler(BaseHTTPRequestHandler):
         if not self._trusted_write():
             return
         route = urlsplit(self.path).path
+        if route.startswith("/api/chats/"):
+            try:
+                chat_store.initialize()
+                thread_id=int(route.split("/")[3])
+                length=int(self.headers.get("Content-Length","0"))
+                if not 0 < length <= 2048: raise ValueError("invalid_body")
+                body=json.loads(self.rfile.read(length).decode("utf-8"))
+                if not isinstance(body,dict) or set(body)!={"title"}: raise ValueError("invalid_body")
+                updated=chat_store.rename(thread_id,body["title"])
+                self.send_json(200 if updated else 404,{"updated":updated})
+            except (ValueError,sqlite3.Error,UnicodeError) as exc:
+                self.send_json(400,{"error":str(exc)})
+            return
         if not route.startswith("/api/notes/"):
             self.send_json(404, {"error": "not_found"})
             return
@@ -291,6 +370,14 @@ class MiyoraHandler(BaseHTTPRequestHandler):
         if not self._trusted_write():
             return
         route = urlsplit(self.path).path
+        if route.startswith("/api/chats/"):
+            try:
+                chat_store.initialize()
+                deleted=chat_store.delete(int(route.split("/")[3]))
+                self.send_json(200 if deleted else 404,{"deleted":deleted})
+            except (ValueError,sqlite3.Error) as exc:
+                self.send_json(400,{"error":str(exc)})
+            return
         if not route.startswith("/api/notes/"):
             self.send_json(404, {"error": "not_found"})
             return
