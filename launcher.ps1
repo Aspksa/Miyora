@@ -82,10 +82,17 @@ try {
       }
     }
     Log ('Python: ' + $program)
-    # Embeddable Python uses an isolated ._pth; explicitly add the project to sys.path.
-    $env:MIYORA_APP_DIR = $appDir
-    $bootstrap = 'import os,sys,runpy; p=os.environ["MIYORA_APP_DIR"]; sys.path.insert(0,p); runpy.run_path(os.path.join(p,"main.py"),run_name="__main__")'
-    $arguments = @('-u', '-c', $bootstrap)
+    # The embeddable distribution isolates sys.path using python313._pth.
+    # Add the project root there so main.py can import app modules directly.
+    $pth = Join-Path $portableDir 'python313._pth'
+    if (-not (Test-Path -LiteralPath $pth -PathType Leaf)) {
+      throw 'Portable Python path configuration is missing: python313._pth'
+    }
+    $pthLines = @(Get-Content -LiteralPath $pth)
+    if (-not ($pthLines | Where-Object { $_.Trim() -eq '..\..\' })) {
+      Add-Content -LiteralPath $pth -Value '..\..\' -Encoding ASCII
+    }
+    $arguments = @('-u', (Join-Path $appDir 'main.py'))
   }
   Set-Location -LiteralPath $appDir
   $env:PORT = '0'
