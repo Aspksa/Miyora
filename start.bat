@@ -2,14 +2,14 @@
 setlocal EnableExtensions DisableDelayedExpansion
 chcp 65001 >nul
 title Miyora Launcher
-pushd "%~dp0" || goto :fail
+rem Resolve the launcher directory, never the current terminal directory.\nrem pushd works on C:, D:, E:, T:, Y: and other drive letters.\nrem For UNC network paths, pushd temporarily maps a drive letter.\nset "MIYORA_ROOT=%~dp0"\npushd "%MIYORA_ROOT%"\nif errorlevel 1 (\n  echo [ERROR] Cannot access the folder containing start.bat.\n  echo [INFO] Check permissions, disk availability, and network share access.\n  goto :fail_no_dir\n)
 
 echo ===================================
 echo          Miyora Launcher
 echo ===================================
 echo.
 
-rem Keep delayed expansion disabled: paths containing !, ^, &, ( and ) are safer.
+rem Keep delayed expansion disabled for paths containing ! and other special characters.\nrem Quoted pushd supports Desktop, OneDrive Desktop, Cyrillic folder names, spaces, dots, and parentheses.\nrem All project commands run relative to the launcher directory, not a hardcoded C: path.
 rem Use quoted paths and PowerShell for Unicode-safe port detection.
 where powershell.exe >nul 2>&1
 if errorlevel 1 (
