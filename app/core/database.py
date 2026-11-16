@@ -117,3 +117,30 @@ def backup(destination: str | Path | None = None) -> Path:
         target.unlink(missing_ok=True)
         raise
     return target
+
+def restore_backup(source: str | Path) -> Path:
+    """Restore only while Miyora is stopped. Preserves the prior database."""
+    source = Path(source).resolve()
+    if not source.is_file() or source == DB_PATH.resolve():
+        raise ValueError("Provide a separate existing SQLite backup")
+    with sqlite3.connect(f"file:{source.as_posix()}?mode=ro", uri=True) as candidate:
+        if candidate.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+            raise sqlite3.DatabaseError("Backup integrity check failed")
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    # Do not replace a database that has active WAL files.
+    if any(Path(str(DB_PATH) + suffix).exists() for suffix in ("-wal", "-shm")):
+        raise RuntimeError("Stop Miyora and checkpoint the database before restore")
+    previous = backup() if DB_PATH.exists() else None
+    stage = DB_PATH.with_name(DB_PATH.name + ".restore-tmp")
+    if stage.exists():
+        raise FileExistsError(stage)
+    try:
+        with sqlite3.connect(str(source)) as input_db, sqlite3.connect(str(stage)) as output:
+            input_db.backup(output)
+        with sqlite3.connect(str(stage)) as verified:
+            if verified.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+                raise sqlite3.DatabaseError("Restored database failed integrity check")
+        stage.replace(DB_PATH)
+    finally:
+        stage.unlink(missing_ok=True)
+    return previous
