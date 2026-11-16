@@ -1,86 +1,86 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
 chcp 65001 >nul 2>&1
-title Miyora - Launcher
-
-rem Always run from the directory containing this BAT file.
+title Miyora Launcher
 pushd "%~dp0"
 if errorlevel 1 goto :folder_error
-
 echo ===================================
 echo           Miyora Launcher
 echo ===================================
 echo.
 echo [INFO] Project folder: "%CD%"
 
-rem The Python core is the primary Miyora application.
-if exist "main.py" goto :run_python
-if exist "app.py" goto :run_python
-
-rem Also support unpacking the project inside one extra directory.
+if exist "main.py" goto :locate_python
 for /d %%D in (*) do (
-    if exist "%%~fD\main.py" (
-        pushd "%%~fD"
-        goto :run_python
-    )
+  if exist "%%~fD\main.py" (
+    pushd "%%~fD"
+    goto :locate_python
+  )
 )
-echo [ERROR] main.py not found.
-echo [INFO] Download the complete Miyora repository, not only start.bat.
+echo [ERROR] main.py not found. Download the entire repository.
 goto :failed
 
-:run_python
-set "PYTHON_CMD="
-where py.exe >nul 2>&1
-if errorlevel 1 goto :check_python_exe
-py -3 -c "import sys" >nul 2>&1
-if errorlevel 1 goto :check_python_exe
-set "PYTHON_CMD=py -3"
-goto :launch
-
-:check_python_exe
-where python.exe >nul 2>&1
-if errorlevel 1 goto :install_python
-python -c "import sys" >nul 2>&1
-if errorlevel 1 goto :install_python
-set "PYTHON_CMD=python"
-goto :launch
-
-:install_python
-echo [INFO] Python not found. Trying winget installation...
+:locate_python
+set "PYTHON_EXE="
+rem Prefer actual executables. The Windows py launcher may have stale registry entries.
+for /f "delims=" %%P in ('where python.exe 2^>nul') do (
+  if not defined PYTHON_EXE call :probe "%%~fP"
+)
+rem Also check commonly installed per-user Python locations on any Windows drive.
+if not defined PYTHON_EXE (
+  for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python3*") do (
+    if not defined PYTHON_EXE call :probe "%%~fD\python.exe"
+  )
+)
+if not defined PYTHON_EXE (
+  for /d %%D in ("%ProgramFiles%\Python3*") do (
+    if not defined PYTHON_EXE call :probe "%%~fD\python.exe"
+  )
+)
+if defined PYTHON_EXE goto :launch
+echo [WARN] No working Python interpreter found.
 where winget.exe >nul 2>&1
 if errorlevel 1 goto :no_python
+echo [INFO] Installing Python 3.13 via winget...
 winget install --id Python.Python.3.13 --exact --source winget --accept-package-agreements --accept-source-agreements
 if errorlevel 1 goto :no_python
-echo [INFO] Python installation completed. Restart launcher to refresh PATH.
-goto :failed
+rem Recheck the executable directly; PATH may not be refreshed yet.
+for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python313*") do (
+  if not defined PYTHON_EXE call :probe "%%~fD\python.exe"
+)
+if not defined PYTHON_EXE (
+  echo [INFO] Python installed. Close and reopen this launcher.
+  goto :failed
+)
+goto :launch
 
-:no_python
-echo [ERROR] Python is required: https://www.python.org/downloads/windows/
-goto :failed
+:probe
+if not exist "%~1" exit /b 0
+"%~1" -c "import sys; assert sys.version_info >= (3, 9); print(sys.executable)" >nul 2>&1
+if not errorlevel 1 set "PYTHON_EXE=%~1"
+exit /b 0
 
 :launch
-rem Port 0 asks Windows to allocate an available local port.
+echo [INFO] Python: "%PYTHON_EXE%"
 set "PORT=0"
 set "HOST=127.0.0.1"
 echo [INFO] Starting Miyora...
-echo [INFO] Browser will open automatically.
-echo [INFO] Keep this window open while using Miyora.
+echo [INFO] Keep this window open. Stop with Ctrl+C.
 echo.
-if exist "main.py" (
-    %PYTHON_CMD% -u "main.py"
-) else (
-    %PYTHON_CMD% -u "app.py"
-)
+"%PYTHON_EXE%" -u "main.py"
+set "MIYORA_EXIT=%ERRORLEVEL%"
 echo.
-echo [ERROR] Miyora process exited. Exit code: %ERRORLEVEL%
+echo [ERROR] Miyora stopped with exit code %MIYORA_EXIT%.
+goto :failed
+
+:no_python
+echo [ERROR] Python unavailable. Install Python from https://www.python.org/downloads/windows/
 goto :failed
 
 :folder_error
-echo [ERROR] Could not open the project folder.
-goto :failed
-
+echo [ERROR] Cannot open the project directory.
 :failed
 echo.
-echo [INFO] This window will stay open until you press a key.
+echo [INFO] Press any key to close this window.
 pause
 exit /b 1
