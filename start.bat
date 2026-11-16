@@ -1,162 +1,86 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
-chcp 65001 >nul
-title Miyora Launcher
-set "ROOT=%~dp0"
-pushd "%ROOT%"
+chcp 65001 >nul 2>&1
+title Miyora - Launcher
+
+rem Always run from the directory containing this BAT file.
+pushd "%~dp0"
 if errorlevel 1 goto :folder_error
 
 echo ===================================
-echo          Miyora Launcher
+echo           Miyora Launcher
 echo ===================================
 echo.
+echo [INFO] Project folder: "%CD%"
 
-rem Find a known app entry point in the launcher folder or one level below.
-set "APP_DIR="
-set "APP_KIND="
-call :detect "."
-if defined APP_KIND goto :found
+rem The Python core is the primary Miyora application.
+if exist "main.py" goto :run_python
+if exist "app.py" goto :run_python
+
+rem Also support unpacking the project inside one extra directory.
 for /d %%D in (*) do (
-  if not defined APP_KIND call :detect "%%~fD"
+    if exist "%%~fD\main.py" (
+        pushd "%%~fD"
+        goto :run_python
+    )
 )
-:found
-if not defined APP_KIND goto :missing_app
-pushd "%APP_DIR%"
-if errorlevel 1 goto :failed
-echo [INFO] Application directory found.
-echo [INFO] Type: %APP_KIND%
-
-if /i "%APP_KIND%"=="python" goto :python_app
-if /i "%APP_KIND%"=="node" goto :node_app
+echo [ERROR] main.py not found.
+echo [INFO] Download the complete Miyora repository, not only start.bat.
 goto :failed
 
-:node_app
-where node.exe >nul 2>&1
-if errorlevel 1 (
-  echo [ERROR] Node.js is missing: https://nodejs.org/
-  goto :failed
-)
-where npm.cmd >nul 2>&1
-if errorlevel 1 goto :failed
-if not exist "node_modules\" (
-  call npm.cmd install
-  if errorlevel 1 goto :failed
-)
-call :select_port
-if not defined MIYORA_PORT goto :failed
-set "PORT=%MIYORA_PORT%"
-set "HOST=127.0.0.1"
-echo [INFO] Selected port: %MIYORA_PORT%
-rem The port flags below apply to Vite dev scripts.
-call npm.cmd run dev -- --host 127.0.0.1 --port %MIYORA_PORT% --strictPort
-if errorlevel 1 goto :failed
-goto :success
-
-:python_app
-call :python_check
-if not errorlevel 1 goto :python_ready
-echo [INFO] Installing Python via winget...
-where winget.exe >nul 2>&1
-if errorlevel 1 (
-  echo [ERROR] winget unavailable. Install Python from https://www.python.org/downloads/windows/
-  goto :failed
-)
-winget install --id Python.Python.3.13 --exact --source winget --accept-package-agreements --accept-source-agreements --silent
-if errorlevel 1 goto :failed
-call :python_check
-if errorlevel 1 (
-  echo [ERROR] Python installed but is not visible yet. Restart Windows terminal and retry.
-  goto :failed
-)
-:python_ready
-if exist "requirements.txt" (
-  call :python_exec -m pip install -r requirements.txt
-  if errorlevel 1 goto :failed
-)
-call :select_port
-if not defined MIYORA_PORT goto :failed
-set "PORT=%MIYORA_PORT%"
-set "HOST=127.0.0.1"
-echo [INFO] Selected port: %MIYORA_PORT%
-if exist "main.py" (
-  call :python_exec "main.py"
-) else (
-  call :python_exec "app.py"
-)
-if errorlevel 1 goto :failed
-goto :success
-
-:detect
-if exist "%~1\package.json" (
-  set "APP_DIR=%~1"
-  set "APP_KIND=node"
-  exit /b 0
-)
-if exist "%~1\main.py" (
-  set "APP_DIR=%~1"
-  set "APP_KIND=python"
-  exit /b 0
-)
-if exist "%~1\app.py" (
-  set "APP_DIR=%~1"
-  set "APP_KIND=python"
-)
-exit /b 0
-
-:python_check
+:run_python
+set "PYTHON_CMD="
 where py.exe >nul 2>&1
-if not errorlevel 1 (
-  py -3 -c "import sys" >nul 2>&1
-  if not errorlevel 1 exit /b 0
-)
+if errorlevel 1 goto :check_python_exe
+py -3 -c "import sys" >nul 2>&1
+if errorlevel 1 goto :check_python_exe
+set "PYTHON_CMD=py -3"
+goto :launch
+
+:check_python_exe
 where python.exe >nul 2>&1
-if not errorlevel 1 (
-  python -c "import sys" >nul 2>&1
-  if not errorlevel 1 exit /b 0
+if errorlevel 1 goto :install_python
+python -c "import sys" >nul 2>&1
+if errorlevel 1 goto :install_python
+set "PYTHON_CMD=python"
+goto :launch
+
+:install_python
+echo [INFO] Python not found. Trying winget installation...
+where winget.exe >nul 2>&1
+if errorlevel 1 goto :no_python
+winget install --id Python.Python.3.13 --exact --source winget --accept-package-agreements --accept-source-agreements
+if errorlevel 1 goto :no_python
+echo [INFO] Python installation completed. Restart launcher to refresh PATH.
+goto :failed
+
+:no_python
+echo [ERROR] Python is required: https://www.python.org/downloads/windows/
+goto :failed
+
+:launch
+rem Port 0 asks Windows to allocate an available local port.
+set "PORT=0"
+set "HOST=127.0.0.1"
+echo [INFO] Starting Miyora...
+echo [INFO] Browser will open automatically.
+echo [INFO] Keep this window open while using Miyora.
+echo.
+if exist "main.py" (
+    %PYTHON_CMD% -u "main.py"
+) else (
+    %PYTHON_CMD% -u "app.py"
 )
-exit /b 1
-
-:python_exec
-where py.exe >nul 2>&1
-if not errorlevel 1 (
-  py -3 -c "import sys" >nul 2>&1
-  if not errorlevel 1 (
-    py -3 %*
-    exit /b %errorlevel%
-  )
-)
-python %*
-exit /b %errorlevel%
-
-:select_port
-set "MIYORA_PORT="
-for /f "delims=" %%P in ('powershell.exe -NoProfile -NonInteractive -Command "$l=[System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback,0);try{$l.Start();$l.LocalEndpoint.Port}finally{$l.Stop()}"') do set "MIYORA_PORT=%%P"
-exit /b 0
-
-:missing_app
-echo [ERROR] No application entry point found.
-echo [INFO] Checked this directory and immediate subdirectories for:
-echo [INFO] package.json, main.py, or app.py
-echo [INFO] The GitHub repository currently contains only README.md and start.bat.
-echo [INFO] Add the actual Miyora source code to run it.
-goto :failed_root
+echo.
+echo [ERROR] Miyora process exited. Exit code: %ERRORLEVEL%
+goto :failed
 
 :folder_error
-echo [ERROR] Cannot open the launcher directory.
-pause
-exit /b 1
+echo [ERROR] Could not open the project folder.
+goto :failed
 
 :failed
 echo.
-echo [ERROR] Application could not start.
-popd
-:failed_root
-echo [INFO] Review the messages above.
+echo [INFO] This window will stay open until you press a key.
 pause
-popd
 exit /b 1
-
-:success
-popd
-popd
-exit /b 0
