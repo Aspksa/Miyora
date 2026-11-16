@@ -1,4 +1,4 @@
-param([switch]$DebugMode)
+param([switch]$DebugMode, [switch]$Doctor)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location -LiteralPath $root
@@ -93,11 +93,15 @@ try {
       Add-Content -LiteralPath $pth -Value '..\..\' -Encoding ASCII
     }
     $arguments = @('-u', (Join-Path $appDir 'main.py'))
+    if ($Doctor) { $arguments = @('-u', (Join-Path $appDir 'doctor.py')) }
+  }
+  if ($Doctor -and (Test-Path -LiteralPath $exe -PathType Leaf)) {
+    throw 'Doctor requires the source distribution with doctor.py, not the EXE-only bundle.'
   }
   Set-Location -LiteralPath $appDir
   $env:PORT = '0'
   $env:HOST = '127.0.0.1'
-  Log ('Starting Miyora from: ' + $appDir)
+  Log (($(if ($Doctor) { 'Running Miyora doctor from: ' } else { 'Starting Miyora from: ' })) + $appDir)
   & $program @arguments
   $code = $LASTEXITCODE
   Log ('Miyora exited with code ' + $code)
