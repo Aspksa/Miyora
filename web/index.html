@@ -387,6 +387,17 @@ header .right .home-status-dot{margin-left:2px}
 @media(max-width:950px){.chat-layout{grid-template-columns:minmax(0,1fr) minmax(300px,1fr)}.chat-sidebar{left:50%;width:min(280px,50%)}.neural-header{padding:14px}.neural-stats span:last-child{display:none}}
 @media(max-width:690px){.chat-layout{display:flex;flex-direction:column;overflow:auto}.neural-panel{flex:0 0 42%;min-height:240px;border-right:0;border-bottom:1px solid #274049}.chat-main{flex:1 0 58%;min-height:310px}.chat-sidebar{left:0;width:min(290px,85%)}.neural-header{padding:10px 14px}.neural-header h2{font-size:14px}.neural-bottom{padding:8px 12px}.neural-node-list{display:none}.chat-top{height:45px}.chat-welcome{margin:18px auto}.chat-welcome-icon{display:none}.chat-suggestions{margin-top:12px}.chat-suggestions button{min-height:36px}}
 @media(prefers-reduced-motion:reduce){.neural-live{transition:none}}
+
+.neural-modebar{display:flex;gap:5px;flex-wrap:wrap;padding:10px 16px 8px;background:#0a1b23;border-bottom:1px solid #203840}
+.neural-mode{flex:1;min-width:65px;padding:8px 7px;border:1px solid #2a454b;border-radius:8px;background:#10232b;color:#89b5b4;cursor:pointer;font:600 11px system-ui}
+.neural-mode.active,.neural-mode[aria-pressed=true]{background:#1a3e40;color:#d9fff3;border-color:#5bafa7}
+.neural-mode:focus-visible,.neural-controls button:focus-visible,.neural-node-list button:focus-visible{outline:2px solid #f1cb93;outline-offset:2px}
+.neural-inspector{margin-top:10px;border:1px solid #2d5555;border-radius:9px;padding:10px;background:#0e262c;color:#c9e6df;font-size:12px}
+.neural-inspector[hidden]{display:none}
+#neural-inspector-meta{font:10px Consolas,monospace;color:#73b7b2;margin-bottom:5px}
+#neural-inspector-text{max-height:90px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+#neural-inspector-open{margin-top:9px;border:1px solid #43756e;border-radius:6px;padding:6px 10px;background:#1b4342;color:#e3f4ec;cursor:pointer}
+@media(max-width:690px){.neural-modebar{padding:5px 8px}.neural-mode{font-size:10px;padding:5px}.neural-inspector{max-height:90px;overflow:auto}}
 </style>
 </head>
 <body>
@@ -401,8 +412,8 @@ header .right .home-status-dot{margin-left:2px}
 <main class="chat-layout" id="chat-app">
   <section class="neural-panel" aria-label="Граф связей диалога">
     <div class="neural-header"><div><span class="neural-eyebrow">MIYORA / NEURAL WORKSPACE</span><h2>Карта диалога</h2><p>Сообщения и связи из SQLite</p></div><span class="neural-live" id="neural-status">ОЖИДАНИЕ</span></div>
-    <div class="neural-canvas-wrap" id="neural-viewport"><canvas id="neural-canvas" aria-label="Интерактивный граф сообщений" role="img"></canvas><div class="neural-empty" id="neural-empty">Начните диалог или выберите чат, чтобы увидеть граф сообщений.</div><div class="neural-controls"><button type="button" id="neural-zoom-in" title="Приблизить" aria-label="Приблизить граф">+</button><button type="button" id="neural-zoom-out" title="Отдалить" aria-label="Отдалить граф">−</button><button type="button" id="neural-reset" title="Сбросить вид" aria-label="Сбросить вид">⌖</button></div></div>
-    <div class="neural-bottom"><div class="neural-stats"><span id="neural-node-count">0 УЗЛОВ</span><span id="neural-edge-count">0 СВЯЗЕЙ</span><span>КОЛЕСО — МАСШТАБ · ПЕРЕТАСКИВАНИЕ — ОБЗОР</span></div><div class="neural-selected" id="neural-selected" aria-live="polite">Выберите узел, чтобы перейти к сообщению</div><div class="neural-node-list" id="neural-node-list" aria-label="Доступный список узлов графа"></div></div>
+    <div class="neural-modebar" role="group" aria-label="Режим визуализации"><button type="button" class="neural-mode active" data-neural-mode="radial" aria-pressed="true">Ядро</button><button type="button" class="neural-mode" data-neural-mode="links" aria-pressed="false">Связи</button><button type="button" class="neural-mode" data-neural-mode="hex" aria-pressed="false">Карта</button><button type="button" class="neural-mode" data-neural-mode="overview" aria-pressed="false">Обзор</button></div><div class="neural-canvas-wrap" id="neural-viewport"><canvas id="neural-canvas" aria-label="Интерактивный граф сообщений" role="img"></canvas><div class="neural-empty" id="neural-empty">Начните диалог или выберите чат, чтобы увидеть граф сообщений.</div><div class="neural-controls"><button type="button" id="neural-zoom-in" title="Приблизить" aria-label="Приблизить граф">+</button><button type="button" id="neural-zoom-out" title="Отдалить" aria-label="Отдалить граф">−</button><button type="button" id="neural-reset" title="Сбросить вид" aria-label="Сбросить вид">⌖</button></div></div>
+    <div class="neural-bottom"><div class="neural-stats"><span id="neural-node-count">0 УЗЛОВ</span><span id="neural-edge-count">0 СВЯЗЕЙ</span><span>КОЛЕСО — МАСШТАБ · ПЕРЕТАСКИВАНИЕ — ОБЗОР</span></div><div class="neural-selected" id="neural-selected" aria-live="polite">Выберите узел, чтобы перейти к сообщению</div><div class="neural-inspector" id="neural-inspector" hidden><div id="neural-inspector-meta"></div><div id="neural-inspector-text"></div><button type="button" id="neural-inspector-open">Перейти к сообщению</button></div><div class="neural-node-list" id="neural-node-list" aria-label="Доступный список узлов графа"></div></div>
   </section>
   <aside class="chat-sidebar" id="chat-sidebar" aria-label="Навигация чата">
     <div class="chat-side-title"><span class="chat-monogram">✳</span><span>Рабочее пространство</span></div>
@@ -949,9 +960,9 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
   $('chat-welcome').hidden=true;
   try{
    if(!threadId){const t=await api('/api/chats','POST',{title:value.slice(0,80)});threadId=t.id;window.dispatchEvent(new CustomEvent('miyora:thread',{detail:{id:threadId}}));await loadThreads()}
-   history.push({role:'user',content:value});addMessage('user',value);window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:true}}));
+   history.push({role:'user',content:value});addMessage('user',value);window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:true,stage:'подготовка'}}));
    const output=addMessage('assistant','Думаю…');let answer='',finished=false,buffer='';
-   const response=await fetch('/api/chats/'+threadId+'/stream',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history.slice(-30)})});
+   window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:true,stage:'запрос'}}));const response=await fetch('/api/chats/'+threadId+'/stream',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history.slice(-30)})});
    if(!response.ok){const err=await response.json();throw Error(err.error||'HTTP '+response.status)}
    const reader=response.body.getReader(),decoder=new TextDecoder();
    while(!finished){
@@ -960,7 +971,7 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
      const frame=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);
      for(const line of frame.split('\n')){if(!line.startsWith('data: '))continue;const data=line.slice(6);if(data==='[DONE]'){finished=true;break}
       const event=JSON.parse(data);if(event.error)throw Error(event.error);
-      if(event.delta){answer+=event.delta;renderMarkdown(output,answer);$('chat-scroll').scrollTop=$('chat-scroll').scrollHeight}
+      if(event.delta){window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:true,stage:'ответ'}}));answer+=event.delta;renderMarkdown(output,answer);$('chat-scroll').scrollTop=$('chat-scroll').scrollHeight}
      }
     }
    }
@@ -989,15 +1000,34 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  if(!ctx)return;
  let graph={nodes:[],edges:[]},positions=[],threadId=null,requestVersion=0;
  let zoom=1,panX=0,panY=0,width=1,height=1,dpr=1,selected=null,active=false,raf=0;
- let pointer=null,dragged=false,clock=0;
+ let pointer=null,dragged=false,clock=0,mode='radial',activityStage='idle',lastRefresh=0;
  const colors={user:'#6dcfc4',assistant:'#d6aa7b'};
+ const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  function layout(){
   const total=graph.nodes.length;
   positions=graph.nodes.map((node,i)=>{
-   const angle=i*2.399963229728653;
-   const radius=total===1?110:65+Math.sqrt(i+1)*37;
-   return {id:node.id,x:Math.cos(angle)*radius,y:Math.sin(angle)*radius,node};
+   let x,y;
+   if(mode==='hex'){
+    // Deterministic axial hex grid; actual messages grouped into consecutive cells.
+    const q=i%7-3,r=Math.floor(i/7)-Math.ceil(total/14);
+    x=(q+r/2)*88;y=r*76;
+   }else if(mode==='links'){
+    const side=node.role==='user'?-1:1;
+    x=side*(95+(i%3)*43);y=(i-(total-1)/2)*42;
+   }else if(mode==='overview'){
+    const a=i*2.399963229728653;
+    x=Math.cos(a)*(80+Math.sqrt(i+1)*26);y=Math.sin(a)*(80+Math.sqrt(i+1)*26);
+   }else{
+    const angle=i*2.399963229728653;
+    const radius=total===1?110:65+Math.sqrt(i+1)*37;
+    x=Math.cos(angle)*radius;y=Math.sin(angle)*radius;
+   }
+   return {id:node.id,x,y,node};
   });
+ }
+ function hexagon(x,y,r,fill,stroke){
+  ctx.beginPath();for(let j=0;j<6;j++){const a=Math.PI/3*j+Math.PI/6;const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;if(j===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.closePath();
+  ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1.2;ctx.stroke();
  }
  function resize(){
   const rect=viewport.getBoundingClientRect();width=Math.max(1,rect.width);height=Math.max(1,rect.height);
@@ -1018,42 +1048,59 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
   const glow=ctx.createRadialGradient(center.x,center.y,4,center.x,center.y,130*zoom+50);
   glow.addColorStop(0,active?'#29615c77':'#245b5a55');glow.addColorStop(1,'#091b2000');
   ctx.fillStyle=glow;ctx.beginPath();ctx.arc(center.x,center.y,130*zoom+50,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='#24515b';ctx.lineWidth=1;
-  for(let r of [55,110,180]){ctx.beginPath();ctx.arc(center.x,center.y,r*zoom,0,Math.PI*2);ctx.stroke()}
-  ctx.lineWidth=1;ctx.strokeStyle='#327c7a55';
-  for(const p of positions){const s=screen(p);ctx.beginPath();ctx.moveTo(center.x,center.y);ctx.lineTo(s.x,s.y);ctx.stroke()}
+  if(mode==='radial'){
+   for(let r of [55,110,180,250]){ctx.beginPath();ctx.arc(center.x,center.y,r*zoom,0,Math.PI*2);ctx.strokeStyle='#24515b';ctx.lineWidth=1;ctx.stroke()}
+   for(let j=0;j<24;j++){const a=j*Math.PI/12,r1=48*zoom,r2=270*zoom;ctx.beginPath();ctx.moveTo(center.x+Math.cos(a)*r1,center.y+Math.sin(a)*r1);ctx.lineTo(center.x+Math.cos(a)*r2,center.y+Math.sin(a)*r2);ctx.strokeStyle='#23505a55';ctx.stroke()}
+  }
+  if(mode==='overview'){
+   ctx.textAlign='left';ctx.fillStyle='#8dc5bc';ctx.font='12px system-ui';
+   ctx.fillText('СООБЩЕНИЙ  '+graph.nodes.length,18,28);
+   ctx.fillText('ПОЛЬЗОВАТЕЛЬ  '+graph.nodes.filter(n=>n.role==='user').length,18,47);
+   ctx.fillText('MIYORA  '+graph.nodes.filter(n=>n.role==='assistant').length,18,66);
+   ctx.fillText('СВЯЗЕЙ  '+graph.edges.length,18,85);
+  }
   const lookup=new Map(positions.map(p=>[p.id,p]));
+  if(mode!=='hex'){
+   ctx.lineWidth=1;ctx.strokeStyle='#327c7a55';
+   for(const p of positions){const s=screen(p);ctx.beginPath();ctx.moveTo(center.x,center.y);ctx.lineTo(s.x,s.y);ctx.stroke()}
+  }
   ctx.strokeStyle='#72c4bb88';ctx.lineWidth=Math.max(.7,1.2*zoom);
-  for(const edge of graph.edges){const a=lookup.get(edge.source),b=lookup.get(edge.target);if(!a||!b)continue;const sa=screen(a),sb=screen(b);ctx.beginPath();ctx.moveTo(sa.x,sa.y);ctx.lineTo(sb.x,sb.y);ctx.stroke()}
+  for(const edge of graph.edges){const a=lookup.get(edge.source),b=lookup.get(edge.target);if(!a||!b)continue;const sa=screen(a),sb=screen(b);ctx.beginPath();ctx.moveTo(sa.x,sa.y);ctx.lineTo(sb.x,sb.y);ctx.stroke();
+   if(active&&!reduced&&mode!=='hex'){const phase=(clock*.0004+graph.edges.indexOf(edge)*.12)%1;ctx.beginPath();ctx.arc(sa.x+(sb.x-sa.x)*phase,sa.y+(sb.y-sa.y)*phase,2.3,0,Math.PI*2);ctx.fillStyle='#f4c58b';ctx.fill()}
+  }
   for(const p of positions){
    const s=screen(p),radius=Math.max(4,8*zoom),isSelected=selected===p.node.message_id;
    if(s.x < -50||s.x>width+50||s.y< -50||s.y>height+50)continue;
-   ctx.beginPath();ctx.arc(s.x,s.y,isSelected?radius+7:radius+4,0,Math.PI*2);
-   ctx.fillStyle=isSelected?'#e2bc8640':'#4cc8b219';ctx.fill();
-   ctx.beginPath();ctx.arc(s.x,s.y,radius,0,Math.PI*2);ctx.fillStyle=colors[p.node.role]||'#a5d3d0';ctx.fill();
-   ctx.strokeStyle=isSelected?'#ffe1aa':'#0d2a31';ctx.lineWidth=isSelected?2.5:1.5;ctx.stroke();
-   if(zoom>.53||isSelected){ctx.fillStyle='#b5d4d1';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText((p.node.label||'').replace(/\s+/g,' ').slice(0,24),s.x,s.y+radius+16)}
+   if(mode==='hex'){hexagon(s.x,s.y,Math.max(13,44*zoom),isSelected?'#425244':p.node.role==='user'?'#164448':'#493b34',isSelected?'#ffe1aa':'#3b7774')}
+   else{
+    ctx.beginPath();ctx.arc(s.x,s.y,isSelected?radius+7:radius+4,0,Math.PI*2);ctx.fillStyle=isSelected?'#e2bc8640':'#4cc8b219';ctx.fill();
+    ctx.beginPath();ctx.arc(s.x,s.y,radius,0,Math.PI*2);ctx.fillStyle=colors[p.node.role]||'#a5d3d0';ctx.fill();
+    ctx.strokeStyle=isSelected?'#ffe1aa':'#0d2a31';ctx.lineWidth=isSelected?2.5:1.5;ctx.stroke();
+   }
+   if(zoom>.53||isSelected){ctx.fillStyle='#b5d4d1';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText((p.node.label||'').replace(/\s+/g,' ').slice(0,mode==='hex'?11:24),s.x,s.y+(mode==='hex'?4:radius+16))}
   }
-  ctx.beginPath();ctx.arc(center.x,center.y,22*zoom+6,0,Math.PI*2);ctx.fillStyle='#0b252b';ctx.fill();ctx.strokeStyle='#55d5c5';ctx.lineWidth=2;ctx.stroke();
-  ctx.beginPath();ctx.arc(center.x,center.y,15*zoom+3,0,Math.PI*2);ctx.strokeStyle='#4a8d88';ctx.lineWidth=1;ctx.stroke();
-  ctx.fillStyle='#c5fff2';ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillText('M',center.x,center.y+4);
-  if(active){
+  if(mode!=='hex'){
+   ctx.beginPath();ctx.arc(center.x,center.y,22*zoom+6,0,Math.PI*2);ctx.fillStyle='#0b252b';ctx.fill();ctx.strokeStyle='#55d5c5';ctx.lineWidth=2;ctx.stroke();
+   ctx.beginPath();ctx.arc(center.x,center.y,15*zoom+3,0,Math.PI*2);ctx.strokeStyle='#4a8d88';ctx.lineWidth=1;ctx.stroke();
+   ctx.fillStyle='#c5fff2';ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillText('M',center.x,center.y+4);
+  }
+  if(active&&!reduced){
    const a=clock*.0018,r=42*zoom+10;
    ctx.beginPath();ctx.arc(center.x+Math.cos(a)*r,center.y+Math.sin(a)*r,4,0,Math.PI*2);ctx.fillStyle='#e8b77c';ctx.fill();
   }
  }
- function tick(t){raf=0;clock=t;paint();if(active)raf=requestAnimationFrame(tick)}
- function schedule(){if(active&&!raf)raf=requestAnimationFrame(tick);else if(!active)paint()}
- function setActivity(value){active=!!value;$('neural-status').textContent=active?'AI / ГЕНЕРАЦИЯ':threadId?'ДИАЛОГ':'ОЖИДАНИЕ';$('neural-status').classList.toggle('active',active);if(!active&&raf){cancelAnimationFrame(raf);raf=0}schedule()}
+ function tick(t){raf=0;clock=t;paint();if(active&&!reduced)raf=requestAnimationFrame(tick)}
+ function schedule(){if(active&&!reduced&&!raf)raf=requestAnimationFrame(tick);else paint()}
+ function setActivity(value){active=!!value;$('neural-status').textContent=active?'AI / '+activityStage.toUpperCase():threadId?'ДИАЛОГ':'ОЖИДАНИЕ';$('neural-status').classList.toggle('active',active);if(!active&&raf){cancelAnimationFrame(raf);raf=0}schedule()}
  function updateSelection(){
   const item=graph.nodes.find(n=>n.message_id===selected);
   $('neural-selected').textContent=item?(item.role==='user'?'Вы: ':'Miyora: ')+item.label:'Выберите узел, чтобы перейти к сообщению';
   for(const b of $('neural-node-list').children)b.setAttribute('aria-current',String(Number(b.dataset.messageId)===selected));
   paint();
  }
- function choose(id){selected=id;updateSelection();window.dispatchEvent(new CustomEvent('miyora:focus-message',{detail:{id}}))}
+ function choose(id){selected=id;updateSelection();const item=graph.nodes.find(n=>n.message_id===id);$('neural-inspector').hidden=!item;if(item){$('neural-inspector-meta').textContent=(item.role==='user'?'ПОЛЬЗОВАТЕЛЬ':'MIYORA')+' · '+item.created_at+' · ID '+item.message_id;$('neural-inspector-text').textContent=item.content||item.label}window.dispatchEvent(new CustomEvent('miyora:focus-message',{detail:{id}}))}
  function updateGraph(data){
-  graph=data;layout();selected=null;
+  graph=data;layout();selected=null;$('neural-inspector').hidden=true;
   // Reconcile newly streamed DOM messages with their persisted SQLite IDs.
   const visible=Array.from(document.querySelectorAll('#chat-messages .chat-message'));
   let cursor=visible.length-1;
@@ -1099,10 +1146,12 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  canvas.addEventListener('pointermove',e=>{if(!pointer||pointer.id!==e.pointerId)return;const dx=e.clientX-pointer.lastX,dy=e.clientY-pointer.lastY;if(Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y)>5)dragged=true;if(dragged){panX+=dx;panY+=dy;paint()}pointer.lastX=e.clientX;pointer.lastY=e.clientY});
  canvas.addEventListener('pointerup',e=>{if(!pointer||pointer.id!==e.pointerId)return;if(!dragged){const r=canvas.getBoundingClientRect(),node=hit(e.clientX-r.left,e.clientY-r.top);if(node)choose(node.node.message_id)}pointer=null;viewport.classList.remove('dragging')});
  canvas.addEventListener('pointercancel',()=>{pointer=null;viewport.classList.remove('dragging')});
+ document.querySelectorAll('[data-neural-mode]').forEach(button=>button.addEventListener('click',()=>{mode=button.dataset.neuralMode;document.querySelectorAll('[data-neural-mode]').forEach(b=>{const on=b===button;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on))});layout();fit()}));
+ $('neural-inspector-open').onclick=()=>{if(selected!==null)window.dispatchEvent(new CustomEvent('miyora:focus-message',{detail:{id:selected}}))};
  $('neural-zoom-in').onclick=()=>zoomAt(1.3);$('neural-zoom-out').onclick=()=>zoomAt(1/1.3);$('neural-reset').onclick=fit;
  window.addEventListener('miyora:thread',e=>load(e.detail.id));
  window.addEventListener('miyora:refresh',()=>{if(threadId)load(threadId)});
- window.addEventListener('miyora:activity',e=>setActivity(e.detail.active));
+ window.addEventListener('miyora:activity',e=>{activityStage=e.detail.stage||'генерация';setActivity(e.detail.active)});
  if(typeof ResizeObserver!=='undefined')new ResizeObserver(resize).observe(viewport);else window.addEventListener('resize',resize);
  resize();updateGraph({nodes:[],edges:[]});
 })();
