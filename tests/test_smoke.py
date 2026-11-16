@@ -191,6 +191,56 @@ class MiyoraTests(unittest.TestCase):
         self.assertIn('id="db-list"', knowledge)
         self.assertIn('id="kb-refresh-all"', knowledge)
 
+    def test_file_preview_and_search(self):
+        from app.core import file_search
+        from urllib.error import HTTPError
+        root = Path(self.temp.name) / "search-fixtures"
+        root.mkdir(exist_ok=True)
+        (root / "hello.py").write_text("def hello():\n    return 'УникальныйПоиск'\n", encoding="utf-8")
+        (root / "secret.bin").write_bytes(b"\x00\x01")
+        (root / ".env").write_text("УникальныйПоиск=secret", encoding="utf-8")
+        result = file_search.preview(root, "hello.py")
+        self.assertIn("УникальныйПоиск", result["content"])
+        self.assertEqual(result["lines"], 3)
+        with self.assertRaises(file_search.InvalidFile):
+            file_search.preview(root, "../test.db")
+        with self.assertRaises(file_search.InvalidFile):
+            file_search.preview(root, ".env")
+        with self.assertRaises(file_search.InvalidFile):
+            file_search.preview(root, "secret.bin")
+        outside = Path(self.temp.name) / "outside.py"
+        outside.write_text("outside", encoding="utf-8")
+        link = root / "escape.py"
+        try:
+            link.symlink_to(outside)
+        except (OSError, NotImplementedError):
+            pass
+        else:
+            with self.assertRaises(file_search.InvalidFile):
+                file_search.preview(root, "escape.py")
+        found = file_search.search(root, "УникальныйПоиск")
+        self.assertTrue(any(r["type"] == "file" and r["path"] == "hello.py" for r in found["results"]))
+        self.assertFalse(any(r.get("path") == ".env" for r in found["results"]))
+        with patch.object(self.app_server, "ROOT", root):
+            with urlopen(self.base + "/api/explorer/file?path=hello.py") as response:
+                self.assertIn("УникальныйПоиск", json.load(response)["content"])
+            with urlopen(self.base + "/api/search?q=%D0%A3%D0%BD%D0%B8%D0%BA%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%D0%9F%D0%BE%D0%B8%D1%81%D0%BA") as response:
+                self.assertTrue(json.load(response)["results"])
+            with self.assertRaises(HTTPError) as err:
+                urlopen(self.base + "/api/explorer/file?path=..%2Ftest.db")
+            self.assertEqual(err.exception.code, 400)
+            with self.assertRaises(HTTPError) as err:
+                urlopen(self.base + "/api/search?q=a")
+            self.assertEqual(err.exception.code, 400)
+
+    def test_search_preview_markup(self):
+        with urlopen(self.base + "/") as response:
+            page = response.read().decode("utf-8")
+        for element in ('id="kb-global-query"', 'id="kb-search-results"',
+                        'id="kb-preview-code"', 'function kbHighlight',
+                        'function kbOpenFile', 'function kbRunSearch'):
+            self.assertIn(element, page)
+
     def test_homepage(self):
         with urlopen(self.base + "/") as response:
             self.assertIn(b"Miyora", response.read())

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from app.core import database, explorer
+from app.core import database, explorer, file_search
 import os
 import socket
 import sys
@@ -126,6 +126,23 @@ class MiyoraHandler(BaseHTTPRequestHandler):
                     int(params.get("limit", ["30"])[0])))
             except (ValueError, OverflowError):
                 self.send_json(400, {"error": "invalid_table_or_pagination"})
+            except sqlite3.Error:
+                self.send_json(503, {"error": "database_unavailable"})
+        elif route == "/api/explorer/file":
+            try:
+                params = parse_qs(urlsplit(self.path).query)
+                self.send_json(200, file_search.preview(ROOT, params.get("path", [""])[0]))
+            except file_search.InvalidFile as exc:
+                self.send_json(400, {"error": str(exc)})
+            except OSError:
+                self.send_json(404, {"error": "file_unavailable"})
+        elif route == "/api/search":
+            try:
+                params = parse_qs(urlsplit(self.path).query)
+                self.send_json(200, file_search.search(ROOT, params.get("q", [""])[0],
+                                                       int(params.get("limit", ["50"])[0])))
+            except (ValueError, OverflowError):
+                self.send_json(400, {"error": "invalid_search"})
             except sqlite3.Error:
                 self.send_json(503, {"error": "database_unavailable"})
         elif route == "/api/notes":
