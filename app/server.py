@@ -145,6 +145,25 @@ class MiyoraHandler(BaseHTTPRequestHandler):
                 self.send_json(400, {"error": "invalid_search"})
             except sqlite3.Error:
                 self.send_json(503, {"error": "database_unavailable"})
+        elif route == "/api/status/connections":
+            try:
+                configured = cloudru.settings()
+                self.send_json(200, {"system": "online", "api": "configured" if configured["has_key"] else "not_configured",
+                                     "model": configured["model"]})
+            except (cloudru.CloudError, sqlite3.Error, OSError):
+                self.send_json(503, {"system": "online", "api": "error"})
+        elif route == "/api/status/connections/check":
+            try:
+                configured = cloudru.settings()
+                if not configured["has_key"]:
+                    self.send_json(200, {"api": "not_configured"})
+                else:
+                    cloudru.models()
+                    self.send_json(200, {"api": "connected", "model": configured["model"]})
+            except cloudru.CloudError as exc:
+                self.send_json(200, {"api": "disconnected", "reason": str(exc)})
+            except (sqlite3.Error, OSError):
+                self.send_json(503, {"api": "error"})
         elif route == "/api/settings/cloudru":
             try:
                 self.send_json(200, cloudru.settings())
