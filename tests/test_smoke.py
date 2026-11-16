@@ -538,7 +538,7 @@ class MiyoraTests(unittest.TestCase):
         for token in ('id="mz-panel-toggle"', 'id="mz-floating-panel"',
                       'id="mz-camera-speed"', 'id="mz-signals"',
                       'id="mz-center"', 'targetCamera', 'cameraSpeed',
-                      'signalsEnabled', 'const smooth=reduced?1:cameraSpeed',
+                      'signalsEnabled', 'const smooth=reduced?1:1-Math.exp(-Math.max(.01,cameraSpeed*12)*dt)',
                       'aria-expanded', 'prefers-reduced-motion:reduce'):
             self.assertIn(token, html)
 
@@ -551,6 +551,17 @@ class MiyoraTests(unittest.TestCase):
                       'function updateSearch()', 'function focusNode(p)',
                       'const aggregate=zoom<.48', 'const faded=id=>',
                       'ctx.globalAlpha=.14', 'physicsMoving'):
+            self.assertIn(token, html)
+
+    def test_cinematic_neural_motion(self):
+        with urlopen(self.base + "/") as response:
+            html = response.read().decode("utf-8")
+        for token in ('id="mz-orbit-speed"', 'id="mz-node-tooltip"',
+                      'id="mz-tooltip-role"', 'id="mz-tooltip-meta"',
+                      'id="mz-tooltip-content"', 'function showNodeTooltip(',
+                      'orbitAngle+=dt*orbitSpeed', 'appearances.set(',
+                      'Math.exp(-Math.max(.01,cameraSpeed*12)*dt)',
+                      '@keyframes mz-panel-in', 'prefers-reduced-motion:reduce'):
             self.assertIn(token, html)
 
     def test_streaming_provider(self):
