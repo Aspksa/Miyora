@@ -1,5 +1,6 @@
 """Miyora smoke tests: python -m unittest discover -s tests -v"""
 import json
+from contextlib import closing
 import os
 import tempfile
 import threading
@@ -53,6 +54,41 @@ class MiyoraTests(unittest.TestCase):
         self.assertEqual(self.app_server.PAGE_PATH.parent.name, 'web')
         self.assertTrue(self.app_server.PAGE_PATH.is_file())
 
+    def test_explorer_api(self):
+        from urllib.error import HTTPError
+        with urlopen(self.base + "/api/explorer/overview") as response:
+            overview = json.load(response)
+        self.assertIn("project", overview)
+        self.assertIn("database_files", overview)
+        with urlopen(self.base + "/api/explorer/tables") as response:
+            tables = json.load(response)["tables"]
+        names = [item["name"] for item in tables]
+        self.assertIn("notes", names)
+        self.assertIn("settings", names)
+        with urlopen(self.base + "/api/explorer/rows?table=notes&limit=2") as response:
+            rows = json.load(response)
+        self.assertIn("title", rows["columns"])
+        with self.assertRaises(HTTPError) as error:
+            urlopen(self.base + "/api/explorer/rows?table=sqlite_master")
+        self.assertEqual(error.exception.code, 400)
+
+    def test_explorer_rejects_symlink_traversal(self):
+        from app.core.explorer import project_tree
+        root = Path(self.temp.name) / "project"
+        root.mkdir(exist_ok=True)
+        (root / "visible.txt").write_text("hello", encoding="utf-8")
+        outside = Path(self.temp.name) / "outside.txt"
+        outside.write_text("secret", encoding="utf-8")
+        link = root / "escape"
+        try:
+            link.symlink_to(outside)
+        except (OSError, NotImplementedError):
+            pass
+        result = project_tree(root)
+        names = [x["name"] for x in result["children"]]
+        self.assertIn("visible.txt", names)
+        self.assertNotIn("escape", names)
+
     def test_health(self):
         with urlopen(self.base + "/api/health") as response:
             self.assertEqual(json.load(response)["status"], "ok")
@@ -87,7 +123,7 @@ class MiyoraTests(unittest.TestCase):
         target = db.backup()
         self.assertTrue(target.is_file())
         import sqlite3
-        with sqlite3.connect(str(target)) as backup_db:
+        with closing(sqlite3.connect(str(target))) as backup_db:
             self.assertEqual(backup_db.execute("PRAGMA integrity_check").fetchone()[0], "ok")
             self.assertEqual(backup_db.execute("SELECT title FROM notes WHERE id=?", (note["id"],)).fetchone()[0], "Обновлено")
 

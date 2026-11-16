@@ -39,7 +39,7 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
 .db-row button{padding:6px 9px}.db-msg{font-size:12px;color:#aaa;min-height:20px}
 
 /* Knowledge workspace: scalable, movable, keyboard accessible */
-.kb-launch{display:inline-flex;align-items:center;gap:9px;border:1px solid #464657;border-radius:13px;padding:10px 14px;color:#f5f4ff;background:linear-gradient(140deg,#29293b,#16161f);box-shadow:inset 0 1px #ffffff25,0 6px 24px #0005;cursor:pointer;font:600 12px inherit;transition:transform .18s,border-color .18s}
+.kb-launch{display:inline-flex;align-items:center;gap:9px;border:1px solid #464657;border-radius:13px;padding:10px 14px;color:#f5f4ff;background:linear-gradient(140deg,#29293b,#16161f);box-shadow:inset 0 1px #ffffff25,0 6px 24px #0005;cursor:pointer;font:inherit;font-size:12px;font-weight:600;transition:transform .18s,border-color .18s}
 .kb-launch:hover{transform:translateY(-2px);border-color:#a6a0e8}.kb-launch:focus-visible,.kb-window button:focus-visible{outline:2px solid #b9afff;outline-offset:3px}
 .kb-launch svg{width:21px;height:21px;flex:none;stroke:#c8c0ff}
 .kb-layer[hidden]{display:none}.kb-layer{position:fixed;inset:0;z-index:1000;pointer-events:none}
@@ -57,6 +57,43 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
 .kb-foot{padding:12px 20px;border-top:1px solid #292833;color:#89859e;font-size:11px;display:flex;justify-content:space-between;gap:12px}
 @media(max-width:600px){header{padding:0 14px}.kb-launch{padding:9px}.kb-launch span{display:none}.kb-window{min-width:0;width:calc(100vw - 16px);height:min(640px,calc(100dvh - 16px));border-radius:15px}.kb-head{padding:12px 14px}.kb-foot{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.kb-launch{transition:none}}
+
+/* Unified live explorer */
+.kb-window{width:min(1080px,calc(100vw - 28px));height:min(790px,calc(100dvh - 28px));min-width:320px;min-height:350px}
+.kb-content{padding:16px;display:flex;flex-direction:column;gap:16px}
+.kb-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.kb-metric{padding:15px;border:1px solid #333044;border-radius:15px;background:linear-gradient(145deg,#232033,#171720);min-width:0}
+.kb-metric strong{display:block;font-size:clamp(17px,2.5vw,26px);letter-spacing:-.7px;color:#f5f0ff;overflow-wrap:anywhere}
+.kb-metric span{font-size:11px;color:#a19cb6}
+.kb-section{background:#17171f;border:1px solid #302e3c;border-radius:17px;padding:16px;min-width:0}
+.kb-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.kb-section-head h3{font-size:14px;font-weight:650;margin:0;color:#f4f1ff}
+.kb-muted{font-size:11px;color:#9691a8}
+.kb-split{display:grid;grid-template-columns:minmax(190px,35%) minmax(0,1fr);gap:12px;min-height:260px}
+.kb-tree{max-height:390px;overflow:auto;min-width:0;border:1px solid #302e3c;border-radius:12px;padding:7px;background:#111119}
+.kb-node{display:flex;align-items:center;gap:7px;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;color:#e0dcec;padding:8px 6px;font:inherit;font-size:12px;cursor:pointer;min-width:0}
+.kb-node:hover,.kb-node[aria-selected=true]{background:#302b46}
+.kb-node .kb-node-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kb-node .kb-size{color:#9a95b0;font-size:10px;white-space:nowrap}
+.kb-node .kb-glyph{color:#b8a5f8}
+.kb-detail{min-width:0;border:1px solid #302e3c;border-radius:12px;background:#111119;padding:14px;overflow:auto}
+.kb-detail strong{display:block;overflow-wrap:anywhere;color:#eae5ff}
+.kb-detail p{color:#aaa4bb;font-size:12px;overflow-wrap:anywhere;line-height:1.7}
+.kb-tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:9px}
+.kb-table-choice{background:#1c1b29;border:1px solid #363248;border-radius:12px;padding:13px;color:#f0edff;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px;font:inherit;min-width:0}
+.kb-table-choice[aria-pressed=true]{border-color:#9b8be5;background:#302a47}
+.kb-table-choice span{font-size:11px;color:#a8a1bf}
+.kb-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:12px 0}
+.kb-toolbar button{background:#29253a;border:1px solid #48405c;border-radius:9px;padding:8px 12px;color:#eee;cursor:pointer}
+.kb-toolbar button:disabled{opacity:.35;cursor:default}
+.kb-table-scroll{overflow:auto;max-height:300px;border:1px solid #343042;border-radius:11px}
+.kb-data-table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}
+.kb-data-table th,.kb-data-table td{border-bottom:1px solid #302c3d;padding:11px 13px;text-align:left;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.kb-data-table th{position:sticky;top:0;background:#29253a;color:#c7b9ff;z-index:1}
+.kb-data-table td{color:#ded9ed}
+.kb-empty{color:#aaa3b8;font-size:12px;padding:15px}
+@container(max-width:560px){.kb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.kb-split{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:560px){.kb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.kb-split{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -101,12 +138,31 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
       <button type="button" class="kb-close" id="kb-close" aria-label="Закрыть базу знаний">×</button>
     </div>
     <div class="kb-content">
-      <p class="kb-intro">Здесь будет собрана ваша база знаний: заметки, материалы, коллекции и связанные идеи. Окно можно перемещать за верхнюю панель и изменять его размер за правый нижний угол.</p>
-      <div class="kb-cards">
-        <article class="kb-card"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><h3>Заметки</h3><p>Место для записей, мыслей и полезной информации.</p></article>
-        <article class="kb-card"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M3 7h7l2 2h9v11H3z"/><path d="M3 7V5h8l2 2"/></svg><h3>Коллекции</h3><p>Организация материалов по темам и проектам.</p></article>
-        <article class="kb-card"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="m8 7 3 9m5-9-3 9M8 6h8"/></svg><h3>Связи</h3><p>Будущая карта взаимосвязанных знаний и идей.</p></article>
+      <div class="kb-metrics" aria-label="Состояние проекта">
+        <div class="kb-metric"><strong id="kb-count">—</strong><span>Записи</span></div>
+        <div class="kb-metric"><strong id="kb-dbsize">—</strong><span>SQLite + WAL / SHM</span></div>
+        <div class="kb-metric"><strong id="kb-tablecount">—</strong><span>Таблицы</span></div>
+        <div class="kb-metric"><strong id="kb-projectsize">—</strong><span>Размер проекта</span></div>
       </div>
+      <section class="kb-section" aria-labelledby="kb-files-heading">
+        <div class="kb-section-head"><h3 id="kb-files-heading">◈ Структура проекта</h3><span class="kb-muted" id="kb-filecount">Сканирование…</span></div>
+        <div class="kb-split">
+          <div class="kb-tree" id="kb-tree" aria-label="Файлы и каталоги"></div>
+          <div class="kb-detail" id="kb-file-detail"><strong>Выберите файл или каталог</strong><p>Здесь появятся путь, размер и тип объекта.</p></div>
+        </div>
+      </section>
+      <section class="kb-section" aria-labelledby="kb-tables-heading">
+        <div class="kb-section-head"><h3 id="kb-tables-heading">▦ Таблицы SQLite</h3><span class="kb-muted">Только чтение · реальные данные</span></div>
+        <div class="kb-tables" id="kb-tables"></div>
+        <div class="kb-toolbar"><strong id="kb-selected-table">Выберите таблицу</strong><div><button id="kb-show-records" type="button">Записи</button> <button id="kb-show-fields" type="button">Поля</button></div></div>
+        <div class="kb-table-scroll"><table class="kb-data-table" id="kb-data-table"></table></div>
+        <div class="kb-toolbar"><span class="kb-muted" id="kb-page-label"></span><div><button id="kb-prev" type="button">← Назад</button> <button id="kb-next" type="button">Далее →</button></div></div>
+      </section>
+      <section class="kb-section" aria-labelledby="kb-memory-heading">
+        <div class="kb-section-head"><h3 id="kb-memory-heading">✦ Память проекта</h3><span class="kb-muted">Сохранённые записи</span></div>
+        <p class="kb-muted">Заметки Miyora доступны в редакторе базы данных на главной странице. Здесь отображаются таблицы и фактические данные проекта.</p>
+      </section>
+      <p class="kb-muted" id="kb-error" role="status"></p>
     </div>
     <div class="kb-foot"><span>MIYORA / KNOWLEDGE</span><span>Перетащите заголовок · Измените размер ↘</span></div>
   </section>
@@ -206,6 +262,82 @@ refreshNotes();
       win.style.top=Math.max(0,Math.min(innerHeight-r.height,r.top))+'px';
     }
   });
+})();
+
+(function(){
+ const el=id=>document.getElementById(id);
+ const size=n=>{if(!Number.isFinite(n))return '—';const u=['Б','КБ','МБ','ГБ'];let i=0;while(n>=1024&&i<u.length-1){n/=1024;i++}return (i?n.toFixed(n<10?1:0):n.toFixed(0))+' '+u[i]};
+ const state={tables:[],selected:null,offset:0,view:'records',expanded:new Set(['Miyora']),tree:null};
+ const text=(tag,value,className)=>{const x=document.createElement(tag);x.textContent=String(value??'—');if(className)x.className=className;return x};
+ function drawTree(){
+  const host=el('kb-tree');host.replaceChildren();
+  if(!state.tree)return;
+  function add(node,path,depth){
+   const full=path?path+'/'+node.name:node.name;
+   const row=document.createElement('button');row.type='button';row.className='kb-node';row.style.paddingLeft=(6+depth*13)+'px';
+   const folder=node.type==='directory';
+   row.append(text('span',folder?(state.expanded.has(full)?'▾':'▸'):'◇','kb-glyph'),text('span',node.name,'kb-node-name'),text('span',size(node.bytes),'kb-size'));
+   row.onclick=()=>{
+    host.querySelectorAll('[aria-selected]').forEach(x=>x.removeAttribute('aria-selected'));row.setAttribute('aria-selected','true');
+    if(folder){state.expanded.has(full)?state.expanded.delete(full):state.expanded.add(full);drawTree()}
+    const d=el('kb-file-detail');d.replaceChildren(text('strong',full),text('p','Тип: '+(folder?'Каталог':node.type)+' · Размер: '+size(node.bytes)),text('p',folder?'Элементов: '+(node.children||[]).length+(node.truncated?' · Список ограничен':''):'Путь относительно корня проекта'));
+   };
+   host.append(row);
+   if(folder&&state.expanded.has(full))for(const child of node.children||[])add(child,full,depth+1);
+  }
+  add(state.tree,'',0);
+ }
+ function grid(columns,rows){
+  const table=el('kb-data-table');table.replaceChildren();
+  const head=document.createElement('thead'),tr=document.createElement('tr');
+  for(const col of columns)tr.append(text('th',col));head.append(tr);table.append(head);
+  const body=document.createElement('tbody');
+  for(const row of rows){const tr=document.createElement('tr');for(const col of columns){const cell=text('td',row[col]);cell.title=String(row[col]??'');tr.append(cell)}body.append(tr)}
+  table.append(body);
+  if(!rows.length){const empty=text('div','Нет записей','kb-empty');el('kb-page-label').textContent='0 записей';table.after(empty);setTimeout(()=>empty.remove(),2500)}
+ }
+ async function renderTable(){
+  const t=state.tables.find(x=>x.name===state.selected);if(!t)return;
+  el('kb-selected-table').textContent=t.name+' · '+t.count+' строк';
+  el('kb-prev').disabled=state.offset===0||state.view==='fields';
+  el('kb-next').disabled=state.offset+30>=t.count||state.view==='fields';
+  if(state.view==='fields'){
+   grid(['Поле','Тип','PK','NOT NULL'],t.fields.map(x=>({'Поле':x.name,'Тип':x.type,'PK':x.pk?'Да':'—','NOT NULL':x.notnull?'Да':'—'})));
+   el('kb-page-label').textContent=t.fields.length+' полей';return;
+  }
+  const result=await fetch('/api/explorer/rows?table='+encodeURIComponent(t.name)+'&offset='+state.offset).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()});
+  grid(result.columns,result.rows);el('kb-page-label').textContent=(t.count?state.offset+1:0)+'–'+Math.min(t.count,state.offset+result.rows.length)+' из '+t.count;
+ }
+ function drawTables(){
+  const host=el('kb-tables');host.replaceChildren();
+  for(const t of state.tables){
+   const b=document.createElement('button');b.type='button';b.className='kb-table-choice';b.setAttribute('aria-pressed',String(t.name===state.selected));
+   b.append(text('strong',t.name),text('span',t.count+' строк · '+t.fields.length+' полей'));
+   b.onclick=()=>{state.selected=t.name;state.offset=0;state.view='records';drawTables();renderTable().catch(error)};
+   host.append(b);
+  }
+ }
+ function error(e){el('kb-error').textContent='Не удалось загрузить данные: '+e.message}
+ async function load(){
+  try{
+   const [overview,tables]=await Promise.all(['/api/explorer/overview','/api/explorer/tables'].map(async url=>{const r=await fetch(url);if(!r.ok)throw Error('HTTP '+r.status);return r.json()}));
+   const dbSize=Object.values(overview.database_files).reduce((a,b)=>a+b,0);
+   el('kb-count').textContent=overview.database.total;
+   el('kb-dbsize').textContent=size(dbSize);
+   el('kb-tablecount').textContent=tables.tables.length;
+   el('kb-projectsize').textContent=size(overview.project.bytes);
+   el('kb-filecount').textContent=overview.project.scanned_entries+' элементов';
+   state.tree=overview.project;state.expanded.add(overview.project.name);drawTree();
+   state.tables=tables.tables;
+   if(!state.tables.some(x=>x.name===state.selected))state.selected=state.tables[0]?.name||null;
+   drawTables();await renderTable();el('kb-error').textContent='';
+  }catch(e){error(e)}
+ }
+ el('kb-open').addEventListener('click',load);
+ el('kb-show-records').onclick=()=>{state.view='records';renderTable().catch(error)};
+ el('kb-show-fields').onclick=()=>{state.view='fields';renderTable().catch(error)};
+ el('kb-prev').onclick=()=>{state.offset=Math.max(0,state.offset-30);renderTable().catch(error)};
+ el('kb-next').onclick=()=>{state.offset+=30;renderTable().catch(error)};
 })();
 </script>
 </body>

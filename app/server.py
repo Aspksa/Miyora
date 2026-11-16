@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from app.core import database
+from app.core import database, explorer
 import os
 import socket
 import sys
@@ -107,6 +107,27 @@ class MiyoraHandler(BaseHTTPRequestHandler):
                 self.send_json(503, {"error": "database_unavailable"})
         elif route == "/api/db/stats":
             self.send_json(200, database.stats())
+        elif route == "/api/explorer/overview":
+            try:
+                self.send_json(200, explorer.overview(ROOT))
+            except (OSError, sqlite3.Error):
+                self.send_json(503, {"error": "explorer_unavailable"})
+        elif route == "/api/explorer/tables":
+            try:
+                self.send_json(200, {"tables": explorer.tables()})
+            except sqlite3.Error:
+                self.send_json(503, {"error": "database_unavailable"})
+        elif route == "/api/explorer/rows":
+            try:
+                params = parse_qs(urlsplit(self.path).query)
+                self.send_json(200, explorer.table_rows(
+                    params.get("table", [""])[0],
+                    int(params.get("offset", ["0"])[0]),
+                    int(params.get("limit", ["30"])[0])))
+            except (ValueError, OverflowError):
+                self.send_json(400, {"error": "invalid_table_or_pagination"})
+            except sqlite3.Error:
+                self.send_json(503, {"error": "database_unavailable"})
         elif route == "/api/notes":
             try:
                 params = parse_qs(urlsplit(self.path).query)
