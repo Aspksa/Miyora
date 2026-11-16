@@ -256,6 +256,57 @@ class MiyoraTests(unittest.TestCase):
         self.assertIn('id="kb-tables"', advanced)
         self.assertIn('id="kb-dbsize"', advanced)
 
+    def test_cloudru_settings_and_secret_not_exposed(self):
+        from app.core import cloudru
+        from urllib.error import HTTPError
+        cloudru.clear_key()
+        with urlopen(self.base + "/api/settings/cloudru") as response:
+            settings = json.load(response)
+        self.assertFalse(settings["has_key"])
+        self.assertEqual(settings["base_url"], cloudru.BASE_URL)
+        secret = "test-secret-cloudru-key-123"
+        body = json.dumps({"api_key": secret, "model": "ai-sage/GigaChat3-10B-A1.8B"}).encode()
+        request = Request(self.base + "/api/settings/cloudru", data=body,
+                          headers={"Content-Type": "application/json"}, method="POST")
+        with urlopen(request) as response:
+            saved = json.load(response)
+        self.assertTrue(saved["has_key"])
+        self.assertEqual(saved["model"], "ai-sage/GigaChat3-10B-A1.8B")
+        self.assertNotIn(secret, json.dumps(saved))
+        self.assertEqual(cloudru._read_key(), secret)
+        with self.assertRaises(HTTPError) as error:
+            urlopen(self.base + "/api/settings/cloudru/models")
+        self.assertEqual(error.exception.code, 400)
+        request = Request(self.base + "/api/settings/cloudru", data=b'{"clear_key":true}',
+                          headers={"Content-Type": "application/json"}, method="POST")
+        with urlopen(request) as response:
+            self.assertFalse(json.load(response)["has_key"])
+        self.assertFalse(cloudru._secret_path().exists())
+
+    def test_cloudru_model_catalog(self):
+        from app.core import cloudru
+        from unittest.mock import MagicMock
+        cloudru.save_key("test-cloudru-key")
+        class FakeResponse:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self, count): return b'{"data":[{"id":"provider/model-a"},{"id":"provider/model-b"}]}'
+        with patch.object(cloudru, "urlopen", return_value=FakeResponse()) as mocked:
+            data = cloudru.models()
+            self.assertEqual(data["models"], ["provider/model-a", "provider/model-b"])
+            request = mocked.call_args.args[0]
+            self.assertEqual(request.full_url, cloudru.BASE_URL + "/models")
+            self.assertEqual(request.get_header("Authorization"), "Bearer test-cloudru-key")
+        cloudru.clear_key()
+
+    def test_cloudru_settings_markup(self):
+        with urlopen(self.base + "/") as response:
+            page = response.read().decode("utf-8")
+        for token in ('id="settings-open"', 'id="settings-layer"',
+                      'id="cloudru-key"', 'id="cloudru-model"',
+                      'id="cloudru-load-models"', 'id="cloudru-save"'):
+            self.assertIn(token, page)
+
     def test_homepage(self):
         with urlopen(self.base + "/") as response:
             self.assertIn(b"Miyora", response.read())
