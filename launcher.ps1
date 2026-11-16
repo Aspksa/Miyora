@@ -36,42 +36,56 @@ try {
     foreach ($name in @('main.py', 'database.py', 'index.html')) {
       if (-not (Test-Path -LiteralPath (Join-Path $appDir $name) -PathType Leaf)) { throw ('Missing application file: ' + $name) }
     }
-    $candidates = New-Object System.Collections.Generic.List[string]
-    foreach ($cmd in @(Get-Command python.exe -All -ErrorAction SilentlyContinue)) {
-      if ($cmd.Source) { [void]$candidates.Add($cmd.Source) }
-    }
-    if ($env:LOCALAPPDATA) {
-      $base = Join-Path $env:LOCALAPPDATA 'Programs\Python'
-      if (Test-Path -LiteralPath $base) {
-        Get-ChildItem -LiteralPath $base -Directory -Filter 'Python3*' -ErrorAction SilentlyContinue | ForEach-Object { [void]$candidates.Add((Join-Path $_.FullName 'python.exe')) }
-      }
-    }
-    foreach ($base in @($env:ProgramFiles, [Environment]::GetEnvironmentVariable('ProgramFiles(x86)'))) {
-      if ($base -and (Test-Path -LiteralPath $base)) {
-        Get-ChildItem -LiteralPath $base -Directory -Filter 'Python3*' -ErrorAction SilentlyContinue | ForEach-Object { [void]$candidates.Add((Join-Path $_.FullName 'python.exe')) }
-      }
-    }
+    # The official Windows embeddable distribution lives inside the project.
+    # It never modifies system Python, PATH, registry or user installations.
+    $portableDir = Join-Path $appDir 'runtime\python'
+    $portableExe = Join-Path $portableDir 'python.exe'
     $program = $null
-    foreach ($candidate in ($candidates | Select-Object -Unique)) {
-      if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { continue }
+    if (Test-Path -LiteralPath $portableExe -PathType Leaf) {
       try {
-        $output = & $candidate -c 'import sys; print(sys.version_info.major,sys.version_info.minor)' 2>&1
-        if ($LASTEXITCODE -eq 0 -and $output -match '^3 (9|1[0-9])$') { $program = $candidate; break }
-      } catch { if ($DebugMode) { Log ('Rejected Python: ' + $candidate + ' ' + $_.Exception.Message) } }
+        & $portableExe -c 'import sys, sqlite3, http.server; assert sys.version_info[:2] == (3,13)'
+        if ($LASTEXITCODE -eq 0) { $program = $portableExe; Log 'Using existing portable Python.' }
+      } catch { Log ('Portable Python is damaged: ' + $_.Exception.Message) }
     }
     if (-not $program) {
-      Log 'No working Python >= 3.9 found.'
-      $winget = Get-Command winget.exe -ErrorAction SilentlyContinue
-      if (-not $winget) { throw 'Install Python from https://www.python.org/downloads/windows/' }
-      Log 'Installing Python 3.13 via winget (no repeated install if a working interpreter exists).'
-      & $winget.Source install --id Python.Python.3.13 --exact --source winget --accept-package-agreements --accept-source-agreements
-      if ($LASTEXITCODE -ne 0) { throw ('winget failed with exit code ' + $LASTEXITCODE) }
-      $newPython = Join-Path $env:LOCALAPPDATA 'Programs\Python\Python313\python.exe'
-      if (Test-Path -LiteralPath $newPython) { $program = $newPython }
-      else { throw 'Python installed. Restart start.bat to refresh installed Python paths.' }
+      $version = '3.13.9'
+      $architecture = if ([Environment]::Is64BitOperatingSystem) { 'amd64' } else { 'win32' }
+      $url = "https://www.python.org/ftp/python/$version/python-$version-embed-$architecture.zip"
+      $runtimeRoot = Join-Path $appDir 'runtime'
+      New-Item -ItemType Directory -Force -Path $runtimeRoot | Out-Null
+      $zip = Join-Path $runtimeRoot 'python-download.zip'
+      $stage = Join-Path $runtimeRoot ('python-stage-' + [Guid]::NewGuid().ToString('N'))
+      Log ('Downloading portable Python ' + $version + ' from python.org...')
+      try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $url -OutFile $zip -UseBasicParsing -MaximumRedirection 5
+        New-Item -ItemType Directory -Path $stage | Out-Null
+        Expand-Archive -LiteralPath $zip -DestinationPath $stage -Force
+        $candidate = Join-Path $stage 'python.exe'
+        if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { throw 'Python archive is incomplete.' }
+        & $candidate -c 'import sys, sqlite3, http.server; assert sys.version_info[:2] == (3,13)'
+        if ($LASTEXITCODE -ne 0) { throw 'Portable Python self-test failed.' }
+        if (Test-Path -LiteralPath $portableDir) {
+          $broken = Join-Path $runtimeRoot ('python-old-' + [Guid]::NewGuid().ToString('N'))
+          Move-Item -LiteralPath $portableDir -Destination $broken
+          try { Move-Item -LiteralPath $stage -Destination $portableDir }
+          catch { Move-Item -LiteralPath $broken -Destination $portableDir; throw }
+          Remove-Item -LiteralPath $broken -Recurse -Force -ErrorAction SilentlyContinue
+        } else {
+          Move-Item -LiteralPath $stage -Destination $portableDir
+        }
+        $program = $portableExe
+        Log ('Portable Python ready: ' + $portableExe)
+      } finally {
+        Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
+        if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue }
+      }
     }
     Log ('Python: ' + $program)
-    $arguments = @('-u', 'main.py')
+    # Embeddable Python uses an isolated ._pth; explicitly add the project to sys.path.
+    $env:MIYORA_APP_DIR = $appDir
+    $bootstrap = 'import os,sys,runpy; p=os.environ["MIYORA_APP_DIR"]; sys.path.insert(0,p); runpy.run_path(os.path.join(p,"main.py"),run_name="__main__")'
+    $arguments = @('-u', '-c', $bootstrap)
   }
   Set-Location -LiteralPath $appDir
   $env:PORT = '0'
