@@ -109,7 +109,6 @@ echo [INFO] Writing diagnostics to launcher-diagnostic.txt
 > "%~dp0launcher-diagnostic.txt" echo Miyora launcher diagnostics
 >> "%~dp0launcher-diagnostic.txt" echo Project: %CD%
 >> "%~dp0launcher-diagnostic.txt" echo Python selected: "%PYTHON_EXE%"
->> "%~dp0launcher-diagnostic.txt" echo PATH: %PATH%
 >> "%~dp0launcher-diagnostic.txt" echo Python candidates:
 where python.exe >> "%~dp0launcher-diagnostic.txt" 2>&1
 >> "%~dp0launcher-diagnostic.txt" echo Python launcher versions:
