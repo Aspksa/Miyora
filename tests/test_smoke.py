@@ -15,6 +15,10 @@ class MiyoraTests(unittest.TestCase):
         os.environ["MIYORA_DB_PATH"] = str(Path(cls.temp.name) / "test.db")
         import database
         import main
+        from app.core import database as core_database
+        from app import server as app_server
+        cls.core_database = core_database
+        cls.app_server = app_server
         cls.database = database
         cls.database.initialize()
         cls.server = ThreadingHTTPServer(("127.0.0.1", 0), main.MiyoraHandler)
@@ -28,6 +32,14 @@ class MiyoraTests(unittest.TestCase):
         cls.server.server_close()
         cls.thread.join(timeout=5)
         cls.temp.cleanup()
+
+    def test_modular_structure(self):
+        import database
+        import main
+        self.assertIs(main.MiyoraHandler, self.app_server.MiyoraHandler)
+        self.assertIs(database.initialize, self.core_database.initialize)
+        self.assertEqual(self.app_server.PAGE_PATH.parent.name, 'web')
+        self.assertTrue(self.app_server.PAGE_PATH.is_file())
 
     def test_health(self):
         with urlopen(self.base + "/api/health") as response:
