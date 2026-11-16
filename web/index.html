@@ -981,5 +981,118 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  loadThreads().catch(e=>{const label=document.createElement('span');label.textContent='История недоступна: '+e.message;$('chat-history').append(label)});
 })();
 </script>
+<script>
+/* Neural map: visible persisted conversation events, not hidden model reasoning. */
+(function(){
+ const $=id=>document.getElementById(id);
+ const canvas=$('neural-canvas'),viewport=$('neural-viewport'),ctx=canvas.getContext('2d');
+ if(!ctx)return;
+ let graph={nodes:[],edges:[]},positions=[],threadId=null,requestVersion=0;
+ let zoom=1,panX=0,panY=0,width=1,height=1,dpr=1,selected=null,active=false,raf=0;
+ let pointer=null,dragged=false,clock=0;
+ const colors={user:'#6dcfc4',assistant:'#d6aa7b'};
+ function layout(){
+  const total=graph.nodes.length;
+  positions=graph.nodes.map((node,i)=>{
+   const angle=i*2.399963229728653;
+   const radius=total===1?110:65+Math.sqrt(i+1)*37;
+   return {id:node.id,x:Math.cos(angle)*radius,y:Math.sin(angle)*radius,node};
+  });
+ }
+ function resize(){
+  const rect=viewport.getBoundingClientRect();width=Math.max(1,rect.width);height=Math.max(1,rect.height);
+  dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);paint();
+ }
+ function screen(p){return {x:width/2+panX+p.x*zoom,y:height/2+panY+p.y*zoom}}
+ function fit(){
+  if(!positions.length){zoom=1;panX=0;panY=0;paint();return}
+  const max=Math.max(150,...positions.map(p=>Math.hypot(p.x,p.y)+40));
+  zoom=Math.min(1.4,Math.max(.22,Math.min(width,height)*.43/max));panX=0;panY=0;paint();
+ }
+ function paint(){
+  ctx.clearRect(0,0,width,height);
+  const spacing=35*zoom;
+  if(spacing>8){ctx.fillStyle='#173b41';for(let x=((width/2+panX)%spacing+spacing)%spacing;x<width;x+=spacing)for(let y=((height/2+panY)%spacing+spacing)%spacing;y<height;y+=spacing){ctx.globalAlpha=.3;ctx.beginPath();ctx.arc(x,y,.8,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1}
+  const center=screen({x:0,y:0});
+  const glow=ctx.createRadialGradient(center.x,center.y,4,center.x,center.y,130*zoom+50);
+  glow.addColorStop(0,active?'#29615c77':'#245b5a55');glow.addColorStop(1,'#091b2000');
+  ctx.fillStyle=glow;ctx.beginPath();ctx.arc(center.x,center.y,130*zoom+50,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#24515b';ctx.lineWidth=1;
+  for(let r of [55,110,180]){ctx.beginPath();ctx.arc(center.x,center.y,r*zoom,0,Math.PI*2);ctx.stroke()}
+  ctx.lineWidth=1;ctx.strokeStyle='#327c7a55';
+  for(const p of positions){const s=screen(p);ctx.beginPath();ctx.moveTo(center.x,center.y);ctx.lineTo(s.x,s.y);ctx.stroke()}
+  const lookup=new Map(positions.map(p=>[p.id,p]));
+  ctx.strokeStyle='#72c4bb88';ctx.lineWidth=Math.max(.7,1.2*zoom);
+  for(const edge of graph.edges){const a=lookup.get(edge.source),b=lookup.get(edge.target);if(!a||!b)continue;const sa=screen(a),sb=screen(b);ctx.beginPath();ctx.moveTo(sa.x,sa.y);ctx.lineTo(sb.x,sb.y);ctx.stroke()}
+  for(const p of positions){
+   const s=screen(p),radius=Math.max(4,8*zoom),isSelected=selected===p.node.message_id;
+   if(s.x < -50||s.x>width+50||s.y< -50||s.y>height+50)continue;
+   ctx.beginPath();ctx.arc(s.x,s.y,isSelected?radius+7:radius+4,0,Math.PI*2);
+   ctx.fillStyle=isSelected?'#e2bc8640':'#4cc8b219';ctx.fill();
+   ctx.beginPath();ctx.arc(s.x,s.y,radius,0,Math.PI*2);ctx.fillStyle=colors[p.node.role]||'#a5d3d0';ctx.fill();
+   ctx.strokeStyle=isSelected?'#ffe1aa':'#0d2a31';ctx.lineWidth=isSelected?2.5:1.5;ctx.stroke();
+   if(zoom>.53||isSelected){ctx.fillStyle='#b5d4d1';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText((p.node.label||'').replace(/\s+/g,' ').slice(0,24),s.x,s.y+radius+16)}
+  }
+  ctx.beginPath();ctx.arc(center.x,center.y,22*zoom+6,0,Math.PI*2);ctx.fillStyle='#0b252b';ctx.fill();ctx.strokeStyle='#55d5c5';ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(center.x,center.y,15*zoom+3,0,Math.PI*2);ctx.strokeStyle='#4a8d88';ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle='#c5fff2';ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillText('M',center.x,center.y+4);
+  if(active){
+   const a=clock*.0018,r=42*zoom+10;
+   ctx.beginPath();ctx.arc(center.x+Math.cos(a)*r,center.y+Math.sin(a)*r,4,0,Math.PI*2);ctx.fillStyle='#e8b77c';ctx.fill();
+  }
+ }
+ function tick(t){raf=0;clock=t;paint();if(active)raf=requestAnimationFrame(tick)}
+ function schedule(){if(active&&!raf)raf=requestAnimationFrame(tick);else if(!active)paint()}
+ function setActivity(value){active=!!value;$('neural-status').textContent=active?'AI / ГЕНЕРАЦИЯ':threadId?'ДИАЛОГ':'ОЖИДАНИЕ';$('neural-status').classList.toggle('active',active);if(!active&&raf){cancelAnimationFrame(raf);raf=0}schedule()}
+ function updateSelection(){
+  const item=graph.nodes.find(n=>n.message_id===selected);
+  $('neural-selected').textContent=item?(item.role==='user'?'Вы: ':'Miyora: ')+item.label:'Выберите узел, чтобы перейти к сообщению';
+  for(const b of $('neural-node-list').children)b.setAttribute('aria-current',String(Number(b.dataset.messageId)===selected));
+  paint();
+ }
+ function choose(id){selected=id;updateSelection();window.dispatchEvent(new CustomEvent('miyora:focus-message',{detail:{id}}))}
+ function updateGraph(data){
+  graph=data;layout();selected=null;
+  $('neural-node-count').textContent=graph.nodes.length+' УЗЛОВ';
+  $('neural-edge-count').textContent=graph.edges.length+' СВЯЗЕЙ';
+  $('neural-empty').hidden=graph.nodes.length>0;
+  const list=$('neural-node-list');list.replaceChildren();
+  for(const node of graph.nodes){
+   const button=document.createElement('button');button.type='button';button.dataset.messageId=String(node.message_id);
+   button.textContent=(node.role==='user'?'Вы: ':'AI: ')+node.label;button.title=node.label;
+   button.addEventListener('click',()=>choose(node.message_id));list.append(button);
+  }
+  updateSelection();fit();
+ }
+ async function load(id){
+  const version=++requestVersion;threadId=id;
+  if(!id){updateGraph({nodes:[],edges:[]});setActivity(false);return}
+  $('neural-status').textContent='ЗАГРУЗКА';
+  try{
+   const response=await fetch('/api/chats/'+encodeURIComponent(id)+'/graph',{cache:'no-store'});
+   if(!response.ok)throw Error('HTTP '+response.status);
+   const data=await response.json();if(version!==requestVersion)return;
+   updateGraph(data);setActivity(active);
+  }catch(error){if(version!==requestVersion)return;$('neural-selected').textContent='Не удалось загрузить граф: '+error.message;$('neural-status').textContent='ОШИБКА'}
+ }
+ function hit(x,y){for(let i=positions.length-1;i>=0;i--){const p=positions[i],s=screen(p);if(Math.hypot(x-s.x,y-s.y)<Math.max(13,13*zoom))return p}return null}
+ function zoomAt(factor,x=width/2,y=height/2){
+  const next=Math.max(.16,Math.min(4,zoom*factor)),ratio=next/zoom;
+  panX=x-width/2+(panX-(x-width/2))*ratio;panY=y-height/2+(panY-(y-height/2))*ratio;zoom=next;paint();
+ }
+ viewport.addEventListener('wheel',e=>{e.preventDefault();const r=viewport.getBoundingClientRect();zoomAt(e.deltaY<0?1.12:.89,e.clientX-r.left,e.clientY-r.top)},{passive:false});
+ canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY};dragged=false;canvas.setPointerCapture(e.pointerId);viewport.classList.add('dragging')});
+ canvas.addEventListener('pointermove',e=>{if(!pointer||pointer.id!==e.pointerId)return;const dx=e.clientX-pointer.lastX,dy=e.clientY-pointer.lastY;if(Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y)>5)dragged=true;if(dragged){panX+=dx;panY+=dy;paint()}pointer.lastX=e.clientX;pointer.lastY=e.clientY});
+ canvas.addEventListener('pointerup',e=>{if(!pointer||pointer.id!==e.pointerId)return;if(!dragged){const r=canvas.getBoundingClientRect(),node=hit(e.clientX-r.left,e.clientY-r.top);if(node)choose(node.node.message_id)}pointer=null;viewport.classList.remove('dragging')});
+ canvas.addEventListener('pointercancel',()=>{pointer=null;viewport.classList.remove('dragging')});
+ $('neural-zoom-in').onclick=()=>zoomAt(1.3);$('neural-zoom-out').onclick=()=>zoomAt(1/1.3);$('neural-reset').onclick=fit;
+ window.addEventListener('miyora:thread',e=>load(e.detail.id));
+ window.addEventListener('miyora:refresh',()=>{if(threadId)load(threadId)});
+ window.addEventListener('miyora:activity',e=>setActivity(e.detail.active));
+ if(typeof ResizeObserver!=='undefined')new ResizeObserver(resize).observe(viewport);else window.addEventListener('resize',resize);
+ resize();updateGraph({nodes:[],edges:[]});
+})();
+</script>
 </body>
 </html>
