@@ -1,5 +1,6 @@
 """Miyora smoke tests: python -m unittest discover -s tests -v"""
 import json
+from contextlib import closing
 import os
 import tempfile
 import threading
@@ -122,7 +123,7 @@ class MiyoraTests(unittest.TestCase):
         target = db.backup()
         self.assertTrue(target.is_file())
         import sqlite3
-        with sqlite3.connect(str(target)) as backup_db:
+        with closing(sqlite3.connect(str(target))) as backup_db:
             self.assertEqual(backup_db.execute("PRAGMA integrity_check").fetchone()[0], "ok")
             self.assertEqual(backup_db.execute("SELECT title FROM notes WHERE id=?", (note["id"],)).fetchone()[0], "Обновлено")
 
