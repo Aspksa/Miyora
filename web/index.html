@@ -412,7 +412,7 @@ header .right .home-status-dot{margin-left:2px}
 <main class="chat-layout" id="chat-app">
   <section class="neural-panel" aria-label="Граф связей диалога">
     <div class="neural-header"><div><span class="neural-eyebrow">MIYORA / NEURAL WORKSPACE</span><h2>Карта диалога</h2><p>Сообщения и связи из SQLite</p></div><span class="neural-live" id="neural-status">ОЖИДАНИЕ</span></div>
-    <div class="neural-modebar" role="group" aria-label="Режим визуализации"><button type="button" class="neural-mode active" data-neural-mode="radial" aria-pressed="true">Ядро</button><button type="button" class="neural-mode" data-neural-mode="links" aria-pressed="false">Связи</button><button type="button" class="neural-mode" data-neural-mode="hex" aria-pressed="false">Карта</button><button type="button" class="neural-mode" data-neural-mode="overview" aria-pressed="false">Обзор</button></div><div class="neural-canvas-wrap" id="neural-viewport"><canvas id="neural-canvas" aria-label="Интерактивный граф сообщений" role="img"></canvas><div class="neural-empty" id="neural-empty">Начните диалог или выберите чат, чтобы увидеть граф сообщений.</div><div class="neural-controls"><button type="button" id="neural-zoom-in" title="Приблизить" aria-label="Приблизить граф">+</button><button type="button" id="neural-zoom-out" title="Отдалить" aria-label="Отдалить граф">−</button><button type="button" id="neural-reset" title="Сбросить вид" aria-label="Сбросить вид">⌖</button></div></div>
+    <div class="neural-modebar" role="group" aria-label="Режим визуализации"><button type="button" class="neural-mode active" data-neural-mode="radial" aria-pressed="true">Ядро</button><button type="button" class="neural-mode" data-neural-mode="links" aria-pressed="false">Связи</button><button type="button" class="neural-mode" data-neural-mode="hex" aria-pressed="false">Карта</button><button type="button" class="neural-mode" data-neural-mode="overview" aria-pressed="false">Обзор</button><button type="button" class="neural-mode" data-neural-mode="circle" aria-pressed="false">Круг</button><button type="button" class="neural-mode" data-neural-mode="board" aria-pressed="false">Плата</button><button type="button" class="neural-mode" data-neural-mode="hud" aria-pressed="false">HUD</button></div><div class="neural-canvas-wrap" id="neural-viewport"><canvas id="neural-canvas" aria-label="Интерактивный граф сообщений" role="img"></canvas><div class="neural-empty" id="neural-empty">Начните диалог или выберите чат, чтобы увидеть граф сообщений.</div><div class="neural-controls"><button type="button" id="neural-zoom-in" title="Приблизить" aria-label="Приблизить граф">+</button><button type="button" id="neural-zoom-out" title="Отдалить" aria-label="Отдалить граф">−</button><button type="button" id="neural-reset" title="Сбросить вид" aria-label="Сбросить вид">⌖</button></div></div>
     <div class="neural-bottom"><div class="neural-stats"><span id="neural-node-count">0 УЗЛОВ</span><span id="neural-edge-count">0 СВЯЗЕЙ</span><span>КОЛЕСО — МАСШТАБ · ПЕРЕТАСКИВАНИЕ — ОБЗОР</span></div><div class="neural-selected" id="neural-selected" aria-live="polite">Выберите узел, чтобы перейти к сообщению</div><div class="neural-inspector" id="neural-inspector" hidden><div id="neural-inspector-meta"></div><div id="neural-inspector-text"></div><button type="button" id="neural-inspector-open">Перейти к сообщению</button></div><div class="neural-node-list" id="neural-node-list" aria-label="Доступный список узлов графа"></div></div>
   </section>
   <aside class="chat-sidebar" id="chat-sidebar" aria-label="Навигация чата">
@@ -1000,47 +1000,103 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  if(!ctx)return;
  let graph={nodes:[],edges:[]},positions=[],threadId=null,requestVersion=0;
  let zoom=1,panX=0,panY=0,width=1,height=1,dpr=1,selected=null,active=false,raf=0;
- let pointer=null,dragged=false,clock=0,mode='radial',activityStage='idle',lastRefresh=0,transition=null;
+ let pointer=null,dragged=false,clock=0,mode='radial',activityStage='idle',lastRefresh=0,transition=null,hovered=null,rotation=0;
  const colors={user:'#6dcfc4',assistant:'#d6aa7b'};
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ // Hierarchical rings: adapted from Aspksa/Mizuyori mizuyori/static/brain.js: weighted ring sectors,
+ // matrix-like groups, axial hex clusters, circuit board and HUD track geometry.
+ function sections(){
+  const clusters=graph.clusters||[];
+  return clusters.filter(g=>g.node_ids.length).map((g,i)=>({
+   ...g,index:i,nodes:graph.nodes.filter(n=>g.node_ids.includes(n.id)),
+   color:i%2?'#d6aa7b':'#6dcfc4'
+  }));
+ }
  function layout(){
-  const total=graph.nodes.length;
-  const groups=graph.clusters||[];
-  const groupFor=node=>groups.findIndex(g=>g.node_ids.includes(node.id));
-  positions=graph.nodes.map((node,i)=>{
-   const group=Math.max(0,groupFor(node));
-   const same=graph.nodes.filter(n=>Math.max(0,groupFor(n))===group);
-   const local=same.findIndex(n=>n.id===node.id);
-   const angle=(group===0?Math.PI:0)+(local+.5)*Math.PI/Math.max(1,same.length);
-   let x,y;
-   if(mode==='hex'){
-    const clusterCount=Math.max(1,groups.length),a=group*2*Math.PI/clusterCount;
-    const cx=Math.cos(a)*180,cy=Math.sin(a)*155;
-    const ring=Math.floor((Math.sqrt(12*local+9)-3)/6)+1;
-    const theta=local*2.399963229728653;
-    x=cx+Math.cos(theta)*Math.min(100,ring*25);
-    y=cy+Math.sin(theta)*Math.min(100,ring*25);
-   }else if(mode==='links'){
-    const side=node.role==='user'?-1:1;
-    x=side*(95+(i%3)*43);y=(i-(total-1)/2)*42;
-   }else if(mode==='hex'){
-   const groups=graph.clusters||[];groups.forEach((group,i)=>{const a=i*2*Math.PI/Math.max(1,groups.length);const centerPoint=screen({x:Math.cos(a)*180,y:Math.sin(a)*155});hexagon(centerPoint.x,centerPoint.y,125*zoom,'#10323888',i%2?'#bb966a':'#58a99c');ctx.fillStyle='#b8d9d2';ctx.textAlign='center';ctx.font='bold 12px system-ui';ctx.fillText(group.label,centerPoint.x,centerPoint.y-94*zoom)})
-  }
-  if(mode==='overview'){
-    const a=i*2.399963229728653;
-    x=Math.cos(a)*(80+Math.sqrt(i+1)*26);y=Math.sin(a)*(80+Math.sqrt(i+1)*26);
-   }else{
-    // Hierarchical rings: chronological levels, role sectors, deterministic positions.
-    const level=Math.floor(i/24),within=i%24;
-    const ringCount=Math.min(24,total-level*24);
-    const sector=(node.role==='user'?0:Math.PI);
-    const sectorOffset=(within+.5)/Math.max(1,ringCount)*Math.PI;
-    const a=sector+sectorOffset;
-    const r=95+level*65+(i%3)*12;
-    x=Math.cos(a)*r;y=Math.sin(a)*r;
+  const total=graph.nodes.length,parts=sections();
+  const locations=new Map();
+  if(mode==='radial'){
+   const gap=.07,weights=parts.map(s=>1+Math.sqrt(s.nodes.length));
+   const weightSum=weights.reduce((a,b)=>a+b,0)||1;
+   let angle=-Math.PI/2;
+   parts.forEach((section,i)=>{
+    const span=(Math.PI*2-gap*parts.length)*weights[i]/weightSum;
+    section.sector=[angle,angle+span];
+    const n=section.nodes.length;
+    const rows=Math.max(3,Math.round(Math.sqrt(n)/1.6));
+    const columns=Math.max(1,Math.ceil(n/rows));
+    const step=Math.min(12/230,span/columns);
+    const start=angle+(span-columns*step)/2;
+    section.nodes.forEach((node,j)=>{
+     const a=start+(Math.floor(j/rows)+.5)*step;
+     const r=230+(j%rows)*12;
+     locations.set(node.id,{x:Math.cos(a)*r,y:Math.sin(a)*r});
+    });
+    angle+=span+gap;
+   });
+  }else if(mode==='hex'){
+   // Mizuyori-style axial hex spiral: center reserved for the core.
+   const cells=[],directions=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+   for(let ring=1;cells.length<parts.length;ring++){
+    let q=-ring,r=ring;
+    for(let side=0;side<6;side++)for(let step=0;step<ring;step++){
+     cells.push([q,r]);q+=directions[side][0];r+=directions[side][1];
+    }
    }
-   return {id:node.id,x,y,node};
-  });
+   parts.forEach((section,i)=>{
+    const [q,r]=cells[i],S=150,cx=S*Math.sqrt(3)*(q+r/2),cy=S*1.5*r;
+    section.hex={x:cx,y:cy,size:S};
+    section.nodes.forEach((node,j)=>{
+     const a=j*2.399963229728653,radius=S*.68*Math.sqrt((j+.5)/section.nodes.length);
+     locations.set(node.id,{x:cx+Math.cos(a)*radius,y:cy+Math.sin(a)*radius});
+    });
+   });
+  }else if(mode==='circle'){
+   let offset=0;
+   const radius=Math.max(180,total*11/(Math.PI*2));
+   parts.forEach(section=>{
+    section.nodes.forEach((node,j)=>{
+     const a=-Math.PI/2+(offset+j+.5)/Math.max(1,total)*Math.PI*2;
+     locations.set(node.id,{x:Math.cos(a)*radius,y:Math.sin(a)*radius});
+    });offset+=section.nodes.length;
+   });
+  }else if(mode==='board'){
+   const columns=[[],[]];parts.forEach((section,i)=>columns[i%2].push(section));
+   columns.forEach((column,side)=>{
+    let y=-column.reduce((sum,s)=>sum+Math.max(80,Math.ceil(s.nodes.length/6)*15+48)+34,0)/2;
+    column.forEach(section=>{
+     const h=Math.max(80,Math.ceil(section.nodes.length/6)*15+48);
+     section.board={x:side? -340:170,y,w:170,h};
+     section.nodes.forEach((node,j)=>locations.set(node.id,{
+      x:section.board.x+22+(j%6)*24,
+      y:y+42+Math.floor(j/6)*15
+     }));y+=h+34;
+    });
+   });
+  }else if(mode==='hud'){
+   let radius=135;
+   parts.forEach((section,i)=>{
+    const n=section.nodes.length,tracks=Math.max(1,Math.ceil(n*11/(Math.PI*2*.86*radius)));
+    section.hud={radius,tracks};
+    section.nodes.forEach((node,j)=>{
+     const track=j%tracks,slot=Math.floor(j/tracks),count=Math.ceil(n/tracks);
+     const a=-Math.PI/2+.22+(slot+.5)*Math.min(Math.PI*2*.86/count,14/radius);
+     locations.set(node.id,{x:Math.cos(a)*(radius+track*10),y:Math.sin(a)*(radius+track*10)});
+    });radius+=tracks*10+30;
+   });
+  }else if(mode==='links'){
+   graph.nodes.forEach((node,i)=>locations.set(node.id,{
+    x:(node.role==='user'?-1:1)*(95+(i%3)*43),
+    y:(i-(total-1)/2)*42
+   }));
+  }else{
+   graph.nodes.forEach((node,i)=>{
+    const a=i*2.399963229728653,r=80+Math.sqrt(i+1)*26;
+    locations.set(node.id,{x:Math.cos(a)*r,y:Math.sin(a)*r});
+   });
+  }
+  positions=graph.nodes.map(node=>({id:node.id,...(locations.get(node.id)||{x:0,y:0}),node}));
+  graph._sections=parts;
  }
  function hexagon(x,y,r,fill,stroke){
   ctx.beginPath();for(let j=0;j<6;j++){const a=Math.PI/3*j+Math.PI/6;const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;if(j===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.closePath();
@@ -1077,8 +1133,18 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
    ctx.fillText('СВЯЗЕЙ  '+graph.edges.length,18,85);
    ctx.fillText('ОБЩИЕ ТЕРМИНЫ  '+graph.edges.filter(e=>e.type==='shared_terms').length,18,104);
   }
+  if(mode==='hex'){
+   for(const section of graph._sections||[]){if(!section.hex)continue;const s=screen(section.hex);hexagon(s.x,s.y,section.hex.size*zoom,'#12303966',section.color);ctx.fillStyle=section.color;ctx.textAlign='center';ctx.font='bold 12px system-ui';ctx.fillText(section.label,s.x,s.y-105*zoom)}
+  }
+  if(mode==='board'){
+   for(const section of graph._sections||[]){if(!section.board)continue;const b=section.board,p=screen(b);ctx.fillStyle='#102f36';ctx.fillRect(p.x,p.y,b.w*zoom,b.h*zoom);ctx.strokeStyle=section.color;ctx.strokeRect(p.x,p.y,b.w*zoom,b.h*zoom);ctx.fillStyle=section.color;ctx.font='bold 12px system-ui';ctx.textAlign='left';ctx.fillText(section.label,p.x+12*zoom,p.y+22*zoom);ctx.beginPath();ctx.moveTo(center.x,center.y);ctx.lineTo(p.x+(b.x<0?b.w:0)*zoom,p.y+b.h*zoom/2);ctx.stroke()}
+  }
+  if(mode==='hud'){
+   for(const section of graph._sections||[]){if(!section.hud)continue;for(let track=0;track<section.hud.tracks;track++){ctx.beginPath();ctx.arc(center.x,center.y,(section.hud.radius+track*10)*zoom,0,Math.PI*2);ctx.strokeStyle=section.color+'55';ctx.lineWidth=2;ctx.stroke()}}
+   if(!reduced){const a=clock*.0004;ctx.beginPath();ctx.moveTo(center.x,center.y);ctx.lineTo(center.x+Math.cos(a)*Math.min(width,height)*.45,center.y+Math.sin(a)*Math.min(width,height)*.45);ctx.strokeStyle='#67c5b866';ctx.stroke()}
+  }
   const lookup=new Map(positions.map(p=>[p.id,p]));
-  if(mode!=='hex'){
+  if(mode==='links'||mode==='overview'){
    ctx.lineWidth=1;ctx.strokeStyle='#327c7a55';
    for(const p of positions){const s=screen(p);ctx.beginPath();ctx.moveTo(center.x,center.y);ctx.lineTo(s.x,s.y);ctx.stroke()}
   }
@@ -1089,7 +1155,7 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
   for(const p of positions){
    const s=screen(p),radius=Math.max(4,8*zoom),isSelected=selected===p.node.message_id;
    if(s.x < -50||s.x>width+50||s.y< -50||s.y>height+50)continue;
-   if(mode==='hex'){hexagon(s.x,s.y,Math.max(13,44*zoom),isSelected?'#425244':p.node.role==='user'?'#164448':'#493b34',isSelected?'#ffe1aa':'#3b7774')}
+   if(mode==='hex'){ctx.beginPath();ctx.arc(s.x,s.y,Math.max(3,6*zoom),0,Math.PI*2);ctx.fillStyle=isSelected?'#fff1c2':colors[p.node.role];ctx.fill()}
    else{
     ctx.beginPath();ctx.arc(s.x,s.y,isSelected?radius+7:radius+4,0,Math.PI*2);ctx.fillStyle=isSelected?'#e2bc8640':'#4cc8b219';ctx.fill();
     ctx.beginPath();ctx.arc(s.x,s.y,radius,0,Math.PI*2);ctx.fillStyle=colors[p.node.role]||'#a5d3d0';ctx.fill();
@@ -1107,8 +1173,8 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
    ctx.beginPath();ctx.arc(center.x+Math.cos(a)*r,center.y+Math.sin(a)*r,4,0,Math.PI*2);ctx.fillStyle='#e8b77c';ctx.fill();
   }
  }
- function tick(t){raf=0;clock=t;if(transition){const k=Math.min(1,(t-transition.start)/420),ease=k*k*(3-2*k);for(let i=0;i<positions.length;i++){const p=positions[i],from=transition.from.get(p.id);if(from){p.x=from.x+(transition.to[i].x-from.x)*ease;p.y=from.y+(transition.to[i].y-from.y)*ease}}if(k>=1)transition=null}paint();if((active||transition)&&!reduced)raf=requestAnimationFrame(tick)}
- function schedule(){if((active||transition)&&!reduced&&!raf)raf=requestAnimationFrame(tick);else paint()}
+ function tick(t){raf=0;clock=t;if(transition){const k=Math.min(1,(t-transition.start)/420),ease=k*k*(3-2*k);for(let i=0;i<positions.length;i++){const p=positions[i],from=transition.from.get(p.id);if(from){p.x=from.x+(transition.to[i].x-from.x)*ease;p.y=from.y+(transition.to[i].y-from.y)*ease}}if(k>=1)transition=null}paint();if((active||transition||mode==='hud')&&!reduced)raf=requestAnimationFrame(tick)}
+ function schedule(){if((active||transition||mode==='hud')&&!reduced&&!raf)raf=requestAnimationFrame(tick);else paint()}
  function setActivity(value){active=!!value;$('neural-status').textContent=active?'AI / '+activityStage.toUpperCase():threadId?'ДИАЛОГ':'ОЖИДАНИЕ';$('neural-status').classList.toggle('active',active);if(!active&&raf){cancelAnimationFrame(raf);raf=0}schedule()}
  function updateSelection(){
   const item=graph.nodes.find(n=>n.message_id===selected);

@@ -509,6 +509,18 @@ class MiyoraTests(unittest.TestCase):
         finally:
             chat_store.delete(tid)
 
+    def test_mizuyori_brain_layout_port(self):
+        with urlopen(self.base + "/") as response:
+            html = response.read().decode("utf-8")
+        for marker in ('data-neural-mode="radial"', 'data-neural-mode="hex"',
+                       'data-neural-mode="circle"', 'data-neural-mode="board"',
+                       'data-neural-mode="hud"', 'function sections()',
+                       'function layout()', 'Mizuyori mizuyori/static/brain.js',
+                       'section.sector', 'section.hex', 'section.board',
+                       'section.hud', 'Math.sqrt(s.nodes.length)',
+                       'if(!reduced)', 'miyora:focus-message'):
+            self.assertIn(marker, html)
+
     def test_streaming_provider(self):
         from app.core import cloudru,chat
         cloudru.save_key("test-stream-key")
