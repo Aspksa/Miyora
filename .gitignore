@@ -7,3 +7,6 @@ data/
 *.db-shm
 *.db-wal
 node_modules/
+
+# Downloaded portable Python runtime
+runtime/
