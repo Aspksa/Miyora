@@ -46,3 +46,37 @@ def append(thread_id,role,content):
         if not db.execute("SELECT 1 FROM chat_threads WHERE id=?",(thread_id,)).fetchone(): raise ValueError("thread_not_found")
         db.execute("INSERT INTO chat_messages(thread_id,role,content) VALUES (?,?,?)",(thread_id,role,content))
         db.execute("UPDATE chat_threads SET updated_at=CURRENT_TIMESTAMP WHERE id=?",(thread_id,))
+
+def graph(thread_id: int, limit: int = 160) -> dict | None:
+    """Derive an observable conversation graph from persisted SQLite messages.
+
+    Nodes represent actual messages; edges are chronological message links,
+    not the model's hidden reasoning or inferred semantic relationships.
+    """
+    if not isinstance(thread_id, int) or isinstance(thread_id, bool) or thread_id < 1:
+        raise ValueError("invalid_thread")
+    with closing(database.connect()) as db:
+        thread = db.execute(
+            "SELECT id,title FROM chat_threads WHERE id=?", (thread_id,)
+        ).fetchone()
+        if thread is None:
+            return None
+        rows = db.execute(
+            "SELECT id,role,content,created_at FROM chat_messages "
+            "WHERE thread_id=? ORDER BY id DESC LIMIT ?",
+            (thread_id, max(1, min(limit, 300))),
+        ).fetchall()
+    rows = list(reversed(rows))
+    nodes = [
+        {"id": "message-" + str(row["id"]), "message_id": row["id"],
+         "role": row["role"], "label": row["content"][:100],
+         "created_at": row["created_at"]}
+        for row in rows
+    ]
+    edges = [
+        {"source": nodes[i - 1]["id"], "target": nodes[i]["id"],
+         "type": "sequence"}
+        for i in range(1, len(nodes))
+    ]
+    return {"thread_id": thread["id"], "title": thread["title"],
+            "nodes": nodes, "edges": edges, "source": "sqlite_messages"}

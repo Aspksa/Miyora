@@ -411,6 +411,57 @@ class MiyoraTests(unittest.TestCase):
         self.assertTrue(request("/api/chats/"+str(thread_id),"PUT",{"title":"Updated"})["updated"])
         self.assertTrue(request("/api/chats/"+str(thread_id),"DELETE")["deleted"])
 
+    def test_neural_graph_from_sqlite(self):
+        from app.core import chat_store
+        chat_store.initialize()
+        thread = chat_store.create_thread("Neural graph")
+        tid = thread["id"]
+        self.assertEqual(chat_store.graph(tid)["nodes"], [])
+        chat_store.append(tid, "user", "First question")
+        chat_store.append(tid, "assistant", "First answer")
+        chat_store.append(tid, "user", "Follow-up")
+        data = chat_store.graph(tid)
+        self.assertEqual(data["source"], "sqlite_messages")
+        self.assertEqual([n["role"] for n in data["nodes"]], ["user", "assistant", "user"])
+        self.assertEqual([n["label"] for n in data["nodes"]], ["First question", "First answer", "Follow-up"])
+        self.assertEqual(len(data["edges"]), 2)
+        self.assertEqual(data["edges"][0]["source"], data["nodes"][0]["id"])
+        self.assertEqual(data["edges"][0]["target"], data["nodes"][1]["id"])
+        self.assertEqual(len(chat_store.graph(tid, limit=2)["nodes"]), 2)
+        self.assertIsNone(chat_store.graph(99999999))
+        self.assertTrue(chat_store.delete(tid))
+        self.assertIsNone(chat_store.graph(tid))
+
+    def test_neural_graph_api(self):
+        from urllib.error import HTTPError
+        from app.core import chat_store
+        chat_store.initialize()
+        tid = chat_store.create_thread("Graph API")["id"]
+        chat_store.append(tid, "user", "Persistent node")
+        with urlopen(self.base + "/api/chats/%s/graph" % tid) as response:
+            data = json.load(response)
+        self.assertEqual(data["nodes"][0]["label"], "Persistent node")
+        self.assertEqual(data["thread_id"], tid)
+        for invalid, code in [("/api/chats/999999999/graph", 404),
+                              ("/api/chats/invalid/graph", 400)]:
+            with self.assertRaises(HTTPError) as error:
+                urlopen(self.base + invalid)
+            self.assertEqual(error.exception.code, code)
+        chat_store.delete(tid)
+
+    def test_neural_workspace_markup(self):
+        with urlopen(self.base + "/") as response:
+            html = response.read().decode("utf-8")
+        for marker in ('id="neural-canvas"', 'id="neural-viewport"',
+                       'id="neural-zoom-in"', 'id="neural-zoom-out"',
+                       'id="neural-reset"', 'id="neural-node-list"',
+                       'grid-template-columns:minmax(0,3fr) minmax(340px,2fr)',
+                       'miyora:focus-message', 'miyora:thread',
+                       'miyora:activity', 'ResizeObserver',
+                       'pointerdown', 'pointermove', 'wheel',
+                       '@media(max-width:690px)'):
+            self.assertIn(marker, html)
+
     def test_streaming_provider(self):
         from app.core import cloudru,chat
         cloudru.save_key("test-stream-key")

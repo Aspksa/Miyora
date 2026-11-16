@@ -354,6 +354,39 @@ header .right .home-status-dot{margin-left:2px}
 .chat-message-text table{border-collapse:collapse;display:block;overflow:auto;max-width:100%;margin:12px 0}
 .chat-message-text td,.chat-message-text th{border:1px solid #424d40;padding:7px 10px;text-align:left}.chat-message-text th{background:#303a30}
 .chat-stop{background:#bca68d!important}
+
+/* Neural workspace: persistent 60/40 graph and conversation split */
+.chat-layout{grid-template-columns:minmax(0,3fr) minmax(340px,2fr);position:relative;background:#081018}
+.neural-panel{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#102832 0%,#091620 52%,#07121b 100%);border-right:1px solid #274049;color:#d9eae8}
+.neural-header{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:19px 24px 14px;border-bottom:1px solid #1e3640}
+.neural-eyebrow{color:#4baba6;font:700 9px Consolas,monospace;letter-spacing:.16em}
+.neural-header h2{margin:6px 0 2px;font-size:17px;letter-spacing:.02em;font-weight:650}.neural-header p{margin:0;color:#799b9d;font-size:11px}
+.neural-live{flex:none;color:#70c9b4;border:1px solid #29554f;background:#0d292a;border-radius:20px;padding:7px 10px;font:700 10px Consolas,monospace;letter-spacing:.09em}
+.neural-live.active{color:#e3c18b;border-color:#87663a;background:#30291c}
+.neural-canvas-wrap{position:relative;flex:1;min-height:180px;overflow:hidden;touch-action:none;cursor:grab}
+.neural-canvas-wrap.dragging{cursor:grabbing}
+#neural-canvas{display:block;width:100%;height:100%}
+.neural-empty{position:absolute;left:50%;top:72%;transform:translate(-50%,-50%);width:min(80%,300px);text-align:center;color:#6e9b9b;font-size:12px;line-height:1.6;pointer-events:none}
+.neural-empty[hidden]{display:none}
+.neural-controls{position:absolute;right:16px;bottom:15px;display:flex;gap:5px}
+.neural-controls button{width:32px;height:32px;background:#112c34;border:1px solid #2b5157;border-radius:8px;color:#b7e6df;font-size:18px;cursor:pointer}
+.neural-controls button:hover{background:#1b4347}
+.neural-bottom{flex:none;padding:13px 20px 15px;border-top:1px solid #1e3640;background:#091721}
+.neural-stats{display:flex;flex-wrap:wrap;gap:12px;color:#679b9c;font:10px Consolas,monospace}
+.neural-selected{margin-top:9px;color:#b4d4ce;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.neural-node-list{display:flex;gap:5px;overflow-x:auto;max-width:100%;padding-top:8px;scrollbar-width:thin}
+.neural-node-list button{flex:none;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid #2c4d50;border-radius:6px;background:#11252d;color:#a9d4ce;padding:5px 7px;font-size:10px;cursor:pointer}
+.neural-node-list button[aria-current=true]{border-color:#d6b58b;color:#f4d4a8}
+.chat-main{background:#151b1a}.chat-top{padding:0 15px;gap:8px}.chat-top-name{flex:1;min-width:0}.chat-top-model{max-width:42%}
+.chat-sidebar{display:none;position:absolute;z-index:5;top:0;bottom:0;left:60%;width:min(280px,40%);box-shadow:15px 0 35px #0008}
+.chat-layout.history-open .chat-sidebar{display:flex}
+.chat-sidebar-toggle{flex:none;background:transparent;border:1px solid #3b4943;border-radius:7px;color:#d4ded6;font-size:17px;padding:4px 9px;cursor:pointer}
+.chat-messages{padding:20px 16px 30px;gap:20px}.chat-message{gap:9px}.chat-message-text{font-size:13px}.chat-welcome{width:calc(100% - 34px);margin:40px auto 25px}.chat-welcome h1{font-size:clamp(25px,2.8vw,36px)}
+.chat-suggestions{grid-template-columns:1fr;gap:7px;margin-top:22px}.chat-suggestions button{min-height:42px;padding:10px}
+.chat-compose-wrap{width:calc(100% - 26px);padding-bottom:10px}
+@media(max-width:950px){.chat-layout{grid-template-columns:minmax(0,1fr) minmax(300px,1fr)}.chat-sidebar{left:50%;width:min(280px,50%)}.neural-header{padding:14px}.neural-stats span:last-child{display:none}}
+@media(max-width:690px){.chat-layout{display:flex;flex-direction:column;overflow:auto}.neural-panel{flex:0 0 42%;min-height:240px;border-right:0;border-bottom:1px solid #274049}.chat-main{flex:1 0 58%;min-height:310px}.chat-sidebar{left:0;width:min(290px,85%)}.neural-header{padding:10px 14px}.neural-header h2{font-size:14px}.neural-bottom{padding:8px 12px}.neural-node-list{display:none}.chat-top{height:45px}.chat-welcome{margin:18px auto}.chat-welcome-icon{display:none}.chat-suggestions{margin-top:12px}.chat-suggestions button{min-height:36px}}
+@media(prefers-reduced-motion:reduce){.neural-live{transition:none}}
 </style>
 </head>
 <body>
@@ -366,7 +399,12 @@ header .right .home-status-dot{margin-left:2px}
 </div></div>
 </header>
 <main class="chat-layout" id="chat-app">
-  <aside class="chat-sidebar" aria-label="Навигация чата">
+  <section class="neural-panel" aria-label="Граф связей диалога">
+    <div class="neural-header"><div><span class="neural-eyebrow">MIYORA / NEURAL WORKSPACE</span><h2>Карта диалога</h2><p>Сообщения и связи из SQLite</p></div><span class="neural-live" id="neural-status">ОЖИДАНИЕ</span></div>
+    <div class="neural-canvas-wrap" id="neural-viewport"><canvas id="neural-canvas" aria-label="Интерактивный граф сообщений" role="img"></canvas><div class="neural-empty" id="neural-empty">Начните диалог или выберите чат, чтобы увидеть граф сообщений.</div><div class="neural-controls"><button type="button" id="neural-zoom-in" title="Приблизить" aria-label="Приблизить граф">+</button><button type="button" id="neural-zoom-out" title="Отдалить" aria-label="Отдалить граф">−</button><button type="button" id="neural-reset" title="Сбросить вид" aria-label="Сбросить вид">⌖</button></div></div>
+    <div class="neural-bottom"><div class="neural-stats"><span id="neural-node-count">0 УЗЛОВ</span><span id="neural-edge-count">0 СВЯЗЕЙ</span><span>КОЛЕСО — МАСШТАБ · ПЕРЕТАСКИВАНИЕ — ОБЗОР</span></div><div class="neural-selected" id="neural-selected" aria-live="polite">Выберите узел, чтобы перейти к сообщению</div><div class="neural-node-list" id="neural-node-list" aria-label="Доступный список узлов графа"></div></div>
+  </section>
+  <aside class="chat-sidebar" id="chat-sidebar" aria-label="Навигация чата">
     <div class="chat-side-title"><span class="chat-monogram">✳</span><span>Рабочее пространство</span></div>
     <button type="button" class="chat-new" id="chat-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Новый чат</button>
     <div class="chat-side-label">СЕЙЧАС</div>
@@ -374,7 +412,7 @@ header .right .home-status-dot{margin-left:2px}
     <div class="chat-side-foot">Miyora · локальное приложение</div>
   </aside>
   <section class="chat-main" aria-label="AI-чат">
-    <div class="chat-top"><span class="chat-top-name">Miyora <span class="chat-top-chevron">/</span> Чат</span><span class="chat-top-model" id="chat-model">Cloud.ru</span></div>
+    <div class="chat-top"><button type="button" id="chat-sidebar-toggle" class="chat-sidebar-toggle" aria-label="Показать историю чатов" aria-expanded="false" aria-controls="chat-sidebar">☰</button><span class="chat-top-name">Miyora <span class="chat-top-chevron">/</span> Чат</span><span class="chat-top-model" id="chat-model">Cloud.ru</span></div>
     <div class="chat-scroll" id="chat-scroll" aria-live="polite">
       <div class="chat-welcome" id="chat-welcome">
         <div class="chat-welcome-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 34V14l16 16 16-16v20"/><path d="M8 14l16 16 16-16" opacity=".3"/></svg></div>
@@ -877,8 +915,8 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
    if(!parts.length){parts.push(lines[i++])}inline(p,parts.join('\n'));target.append(p);
   }
  }
- function addMessage(role,content){
-  const item=document.createElement('article');item.className='chat-message';item.dataset.role=role;
+ function addMessage(role,content,messageId){
+  const item=document.createElement('article');item.className='chat-message';item.dataset.role=role;if(messageId)item.dataset.messageId=String(messageId);
   if(role==='assistant'){const avatar=document.createElement('span');avatar.className='chat-avatar';avatar.textContent='✳';item.append(avatar)}
   const bubble=document.createElement('div');bubble.className='chat-bubble';
   if(role==='assistant'){const label=document.createElement('span');label.className='chat-message-label';label.textContent='Miyora';bubble.append(label)}
@@ -896,11 +934,12 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
   }
  }
  async function loadThreads(){const data=await api('/api/chats');threads=data.threads;drawThreads()}
- function stop(){if(controller){controller.abort();controller=null}send.classList.remove('chat-stop');send.title='Отправить';send.setAttribute('aria-label','Отправить сообщение');input.disabled=false}
- function reset(){sequence++;stop();threadId=null;history=[];host.replaceChildren();$('chat-welcome').hidden=false;input.value='';drawThreads()}
+ function stop(){if(controller){controller.abort();controller=null;window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:false}}));window.dispatchEvent(new CustomEvent('miyora:refresh'))}send.classList.remove('chat-stop');send.title='Отправить';send.setAttribute('aria-label','Отправить сообщение');input.disabled=false}
+ function reset(){sequence++;stop();threadId=null;history=[];window.dispatchEvent(new CustomEvent('miyora:thread',{detail:{id:null}}));window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:false}}));host.replaceChildren();$('chat-welcome').hidden=false;input.value='';drawThreads()}
  async function select(id){
-  sequence++;stop();threadId=id;history=[];host.replaceChildren();$('chat-welcome').hidden=true;drawThreads();
-  try{const data=await api('/api/chats/'+id);if(threadId!==id)return;history=data.messages.map(m=>({role:m.role,content:m.content}));history.forEach(m=>addMessage(m.role,m.content))}
+  $('chat-app').classList.remove('history-open');$('chat-sidebar-toggle').setAttribute('aria-expanded','false');
+  sequence++;stop();threadId=id;history=[];window.dispatchEvent(new CustomEvent('miyora:thread',{detail:{id}}));host.replaceChildren();$('chat-welcome').hidden=true;drawThreads();
+  try{const data=await api('/api/chats/'+id);if(threadId!==id)return;history=data.messages.map(m=>({role:m.role,content:m.content}));history.forEach(m=>addMessage(m.role,m.content,m.id))}
   catch(e){addMessage('assistant','Не удалось открыть диалог: '+e.message)}
  }
  async function submit(){
@@ -909,8 +948,8 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
   input.value='';input.disabled=true;send.classList.add('chat-stop');send.title='Остановить';send.setAttribute('aria-label','Остановить генерацию');
   $('chat-welcome').hidden=true;
   try{
-   if(!threadId){const t=await api('/api/chats','POST',{title:value.slice(0,80)});threadId=t.id;await loadThreads()}
-   history.push({role:'user',content:value});addMessage('user',value);
+   if(!threadId){const t=await api('/api/chats','POST',{title:value.slice(0,80)});threadId=t.id;window.dispatchEvent(new CustomEvent('miyora:thread',{detail:{id:threadId}}));await loadThreads()}
+   history.push({role:'user',content:value});addMessage('user',value);window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:true}}));
    const output=addMessage('assistant','Думаю…');let answer='',finished=false,buffer='';
    const response=await fetch('/api/chats/'+threadId+'/stream',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history.slice(-30)})});
    if(!response.ok){const err=await response.json();throw Error(err.error||'HTTP '+response.status)}
@@ -927,14 +966,145 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
    }
    if(active===sequence){if(answer)history.push({role:'assistant',content:answer});else renderMarkdown(output,'Ответ пуст.');await loadThreads()}
   }catch(e){if(active===sequence){const last=host.lastElementChild?.querySelector('.chat-message-text');if(last)renderMarkdown(last,signal.aborted?'Генерация остановлена.':errors[e.message]||'Ошибка: '+e.message);history.pop();await loadThreads().catch(()=>{})}}
-  finally{if(active===sequence){stop();input.focus()}}
+  finally{if(active===sequence){stop();window.dispatchEvent(new CustomEvent('miyora:activity',{detail:{active:false}}));window.dispatchEvent(new CustomEvent('miyora:refresh'));input.focus()}}
  }
+ $('chat-sidebar-toggle').addEventListener('click',()=>{const opened=$('chat-app').classList.toggle('history-open');$('chat-sidebar-toggle').setAttribute('aria-expanded',String(opened))});
+ window.addEventListener('miyora:focus-message',e=>{
+  const id=String(e.detail.id),target=Array.from(host.children).find(el=>el.dataset.messageId===id);
+  if(target){target.scrollIntoView({behavior:'smooth',block:'center'});target.style.outline='1px solid #6cd7c7';setTimeout(()=>{target.style.outline=''},1700)}
+ });
  $('chat-form').addEventListener('submit',e=>{e.preventDefault();if(controller){stop()}else submit()});
  input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();submit()}});
  $('chat-new').onclick=()=>{reset();input.focus()};
  document.querySelectorAll('[data-prompt]').forEach(b=>b.onclick=()=>{input.value=b.dataset.prompt;input.focus()});
  api('/api/settings/cloudru').then(s=>{$('chat-model').textContent=s.model||'Модель не выбрана'}).catch(()=>{});
  loadThreads().catch(e=>{const label=document.createElement('span');label.textContent='История недоступна: '+e.message;$('chat-history').append(label)});
+})();
+</script>
+<script>
+/* Neural map: visible persisted conversation events, not hidden model reasoning. */
+(function(){
+ const $=id=>document.getElementById(id);
+ const canvas=$('neural-canvas'),viewport=$('neural-viewport'),ctx=canvas.getContext('2d');
+ if(!ctx)return;
+ let graph={nodes:[],edges:[]},positions=[],threadId=null,requestVersion=0;
+ let zoom=1,panX=0,panY=0,width=1,height=1,dpr=1,selected=null,active=false,raf=0;
+ let pointer=null,dragged=false,clock=0;
+ const colors={user:'#6dcfc4',assistant:'#d6aa7b'};
+ function layout(){
+  const total=graph.nodes.length;
+  positions=graph.nodes.map((node,i)=>{
+   const angle=i*2.399963229728653;
+   const radius=total===1?110:65+Math.sqrt(i+1)*37;
+   return {id:node.id,x:Math.cos(angle)*radius,y:Math.sin(angle)*radius,node};
+  });
+ }
+ function resize(){
+  const rect=viewport.getBoundingClientRect();width=Math.max(1,rect.width);height=Math.max(1,rect.height);
+  dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);paint();
+ }
+ function screen(p){return {x:width/2+panX+p.x*zoom,y:height/2+panY+p.y*zoom}}
+ function fit(){
+  if(!positions.length){zoom=1;panX=0;panY=0;paint();return}
+  const max=Math.max(150,...positions.map(p=>Math.hypot(p.x,p.y)+40));
+  zoom=Math.min(1.4,Math.max(.22,Math.min(width,height)*.43/max));panX=0;panY=0;paint();
+ }
+ function paint(){
+  ctx.clearRect(0,0,width,height);
+  const spacing=35*zoom;
+  if(spacing>8){ctx.fillStyle='#173b41';for(let x=((width/2+panX)%spacing+spacing)%spacing;x<width;x+=spacing)for(let y=((height/2+panY)%spacing+spacing)%spacing;y<height;y+=spacing){ctx.globalAlpha=.3;ctx.beginPath();ctx.arc(x,y,.8,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1}
+  const center=screen({x:0,y:0});
+  const glow=ctx.createRadialGradient(center.x,center.y,4,center.x,center.y,130*zoom+50);
+  glow.addColorStop(0,active?'#29615c77':'#245b5a55');glow.addColorStop(1,'#091b2000');
+  ctx.fillStyle=glow;ctx.beginPath();ctx.arc(center.x,center.y,130*zoom+50,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#24515b';ctx.lineWidth=1;
+  for(let r of [55,110,180]){ctx.beginPath();ctx.arc(center.x,center.y,r*zoom,0,Math.PI*2);ctx.stroke()}
+  ctx.lineWidth=1;ctx.strokeStyle='#327c7a55';
+  for(const p of positions){const s=screen(p);ctx.beginPath();ctx.moveTo(center.x,center.y);ctx.lineTo(s.x,s.y);ctx.stroke()}
+  const lookup=new Map(positions.map(p=>[p.id,p]));
+  ctx.strokeStyle='#72c4bb88';ctx.lineWidth=Math.max(.7,1.2*zoom);
+  for(const edge of graph.edges){const a=lookup.get(edge.source),b=lookup.get(edge.target);if(!a||!b)continue;const sa=screen(a),sb=screen(b);ctx.beginPath();ctx.moveTo(sa.x,sa.y);ctx.lineTo(sb.x,sb.y);ctx.stroke()}
+  for(const p of positions){
+   const s=screen(p),radius=Math.max(4,8*zoom),isSelected=selected===p.node.message_id;
+   if(s.x < -50||s.x>width+50||s.y< -50||s.y>height+50)continue;
+   ctx.beginPath();ctx.arc(s.x,s.y,isSelected?radius+7:radius+4,0,Math.PI*2);
+   ctx.fillStyle=isSelected?'#e2bc8640':'#4cc8b219';ctx.fill();
+   ctx.beginPath();ctx.arc(s.x,s.y,radius,0,Math.PI*2);ctx.fillStyle=colors[p.node.role]||'#a5d3d0';ctx.fill();
+   ctx.strokeStyle=isSelected?'#ffe1aa':'#0d2a31';ctx.lineWidth=isSelected?2.5:1.5;ctx.stroke();
+   if(zoom>.53||isSelected){ctx.fillStyle='#b5d4d1';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText((p.node.label||'').replace(/\s+/g,' ').slice(0,24),s.x,s.y+radius+16)}
+  }
+  ctx.beginPath();ctx.arc(center.x,center.y,22*zoom+6,0,Math.PI*2);ctx.fillStyle='#0b252b';ctx.fill();ctx.strokeStyle='#55d5c5';ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(center.x,center.y,15*zoom+3,0,Math.PI*2);ctx.strokeStyle='#4a8d88';ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle='#c5fff2';ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillText('M',center.x,center.y+4);
+  if(active){
+   const a=clock*.0018,r=42*zoom+10;
+   ctx.beginPath();ctx.arc(center.x+Math.cos(a)*r,center.y+Math.sin(a)*r,4,0,Math.PI*2);ctx.fillStyle='#e8b77c';ctx.fill();
+  }
+ }
+ function tick(t){raf=0;clock=t;paint();if(active)raf=requestAnimationFrame(tick)}
+ function schedule(){if(active&&!raf)raf=requestAnimationFrame(tick);else if(!active)paint()}
+ function setActivity(value){active=!!value;$('neural-status').textContent=active?'AI / ГЕНЕРАЦИЯ':threadId?'ДИАЛОГ':'ОЖИДАНИЕ';$('neural-status').classList.toggle('active',active);if(!active&&raf){cancelAnimationFrame(raf);raf=0}schedule()}
+ function updateSelection(){
+  const item=graph.nodes.find(n=>n.message_id===selected);
+  $('neural-selected').textContent=item?(item.role==='user'?'Вы: ':'Miyora: ')+item.label:'Выберите узел, чтобы перейти к сообщению';
+  for(const b of $('neural-node-list').children)b.setAttribute('aria-current',String(Number(b.dataset.messageId)===selected));
+  paint();
+ }
+ function choose(id){selected=id;updateSelection();window.dispatchEvent(new CustomEvent('miyora:focus-message',{detail:{id}}))}
+ function updateGraph(data){
+  graph=data;layout();selected=null;
+  // Reconcile newly streamed DOM messages with their persisted SQLite IDs.
+  const visible=Array.from(document.querySelectorAll('#chat-messages .chat-message'));
+  let cursor=visible.length-1;
+  for(let i=graph.nodes.length-1;i>=0;i--){
+   const node=graph.nodes[i];
+   while(cursor>=0){
+    const el=visible[cursor--],content=el.querySelector('.chat-message-text');
+    if(el.dataset.role===node.role&&content&&content.textContent.startsWith(node.label)){
+     el.dataset.messageId=String(node.message_id);break;
+    }
+   }
+   if(cursor<0)break;
+  }
+  $('neural-node-count').textContent=graph.nodes.length+' УЗЛОВ';
+  $('neural-edge-count').textContent=graph.edges.length+' СВЯЗЕЙ';
+  $('neural-empty').hidden=graph.nodes.length>0;
+  const list=$('neural-node-list');list.replaceChildren();
+  for(const node of graph.nodes){
+   const button=document.createElement('button');button.type='button';button.dataset.messageId=String(node.message_id);
+   button.textContent=(node.role==='user'?'Вы: ':'AI: ')+node.label;button.title=node.label;
+   button.addEventListener('click',()=>choose(node.message_id));list.append(button);
+  }
+  updateSelection();fit();
+ }
+ async function load(id){
+  const version=++requestVersion;threadId=id;
+  if(!id){updateGraph({nodes:[],edges:[]});setActivity(false);return}
+  $('neural-status').textContent='ЗАГРУЗКА';
+  try{
+   const response=await fetch('/api/chats/'+encodeURIComponent(id)+'/graph',{cache:'no-store'});
+   if(!response.ok)throw Error('HTTP '+response.status);
+   const data=await response.json();if(version!==requestVersion)return;
+   updateGraph(data);setActivity(active);
+  }catch(error){if(version!==requestVersion)return;$('neural-selected').textContent='Не удалось загрузить граф: '+error.message;$('neural-status').textContent='ОШИБКА'}
+ }
+ function hit(x,y){for(let i=positions.length-1;i>=0;i--){const p=positions[i],s=screen(p);if(Math.hypot(x-s.x,y-s.y)<Math.max(13,13*zoom))return p}return null}
+ function zoomAt(factor,x=width/2,y=height/2){
+  const next=Math.max(.16,Math.min(4,zoom*factor)),ratio=next/zoom;
+  panX=x-width/2+(panX-(x-width/2))*ratio;panY=y-height/2+(panY-(y-height/2))*ratio;zoom=next;paint();
+ }
+ viewport.addEventListener('wheel',e=>{e.preventDefault();const r=viewport.getBoundingClientRect();zoomAt(e.deltaY<0?1.12:.89,e.clientX-r.left,e.clientY-r.top)},{passive:false});
+ canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY};dragged=false;canvas.setPointerCapture(e.pointerId);viewport.classList.add('dragging')});
+ canvas.addEventListener('pointermove',e=>{if(!pointer||pointer.id!==e.pointerId)return;const dx=e.clientX-pointer.lastX,dy=e.clientY-pointer.lastY;if(Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y)>5)dragged=true;if(dragged){panX+=dx;panY+=dy;paint()}pointer.lastX=e.clientX;pointer.lastY=e.clientY});
+ canvas.addEventListener('pointerup',e=>{if(!pointer||pointer.id!==e.pointerId)return;if(!dragged){const r=canvas.getBoundingClientRect(),node=hit(e.clientX-r.left,e.clientY-r.top);if(node)choose(node.node.message_id)}pointer=null;viewport.classList.remove('dragging')});
+ canvas.addEventListener('pointercancel',()=>{pointer=null;viewport.classList.remove('dragging')});
+ $('neural-zoom-in').onclick=()=>zoomAt(1.3);$('neural-zoom-out').onclick=()=>zoomAt(1/1.3);$('neural-reset').onclick=fit;
+ window.addEventListener('miyora:thread',e=>load(e.detail.id));
+ window.addEventListener('miyora:refresh',()=>{if(threadId)load(threadId)});
+ window.addEventListener('miyora:activity',e=>setActivity(e.detail.active));
+ if(typeof ResizeObserver!=='undefined')new ResizeObserver(resize).observe(viewport);else window.addEventListener('resize',resize);
+ resize();updateGraph({nodes:[],edges:[]});
 })();
 </script>
 </body>
