@@ -517,7 +517,7 @@ class MiyoraTests(unittest.TestCase):
                        'data-neural-mode="hud"', 'function sections()',
                        'function layout()', 'Mizuyori mizuyori/static/brain.js',
                        'section.sector', 'section.hex', 'section.board',
-                       'section.hud', 'Math.sqrt(section.nodes.length)',
+                       'section.hud', 'Math.sqrt(s.nodes.length)',
                        'if(!reduced)', 'miyora:focus-message'):
             self.assertIn(marker, html)
 
