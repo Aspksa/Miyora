@@ -32,16 +32,18 @@ def _protect(data: bytes, decrypt: bool = False) -> bytes:
     source, keep = blob(data)
     target = BLOB()
     crypt = ctypes.windll.crypt32.CryptUnprotectData if decrypt else ctypes.windll.crypt32.CryptProtectData
-    if decrypt:
-        ok = crypt(ctypes.byref(source), None, None, None, None, 0, ctypes.byref(target))
-    else:
-        ok = crypt(ctypes.byref(source), None, None, None, None, 0, ctypes.byref(target))
+    crypt.argtypes = [ctypes.POINTER(BLOB), ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(BLOB)]
+    crypt.restype = wintypes.BOOL
+    ok = crypt(ctypes.byref(source), None, None, None, None, 0, ctypes.byref(target))
     if not ok:
         raise CloudError("windows_secret_protection_failed")
     try:
         return ctypes.string_at(target.pbData, target.cbData)
     finally:
-        ctypes.windll.kernel32.LocalFree(target.pbData)
+        free = ctypes.windll.kernel32.LocalFree
+        free.argtypes = [ctypes.c_void_p]
+        free.restype = ctypes.c_void_p
+        free(ctypes.cast(target.pbData, ctypes.c_void_p))
 
 def _read_key() -> str:
     path = _secret_path()
