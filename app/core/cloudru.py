@@ -1,6 +1,7 @@
 """Cloud.ru Foundation Models configuration and authenticated model catalog."""
 from __future__ import annotations
 import base64
+from contextlib import closing
 import ctypes
 import json
 import os
@@ -75,7 +76,7 @@ def clear_key() -> None:
     _secret_path().unlink(missing_ok=True)
 
 def _setting() -> str:
-    with database.connect() as db:
+    with closing(database.connect()) as db:
         row = db.execute("SELECT value FROM settings WHERE key='cloudru_model'").fetchone()
         return row[0] if row else ""
 

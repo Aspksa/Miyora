@@ -252,13 +252,33 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
 #cloudru-save{background:#b7e4a4;color:#172417;font-weight:700}
 #cloudru-message{min-height:18px;margin:0;font-size:12px;color:#b4dca9}
 @media(max-width:650px){header .right{gap:7px}.settings-launch span{display:none}.settings-launch{padding:9px}.cloudru-model-row{flex-wrap:wrap}.cloudru-model-row button{width:100%}.cloudru-form,.settings-heading{padding:17px}}
+
+/* Compact vector status indicators */
+.home-statuses{display:flex;align-items:center;gap:8px}
+.home-status{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid #303a35;border-radius:11px;background:#151b18;color:#d9e6dc;font:inherit;cursor:pointer;text-align:left;min-width:0}
+.home-status:hover{border-color:#779a7f}.home-status:focus-visible{outline:2px solid #b2e0a4;outline-offset:2px}
+.home-status>svg{width:22px;height:22px;flex:none;stroke:#93a89b}
+.home-status-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.home-status-copy strong{font-size:11px;font-weight:650;white-space:nowrap}
+.home-status-copy small{font-size:10px;color:#99a99f;white-space:nowrap}
+.home-status-dot{width:8px;height:8px;flex:none;border-radius:50%;background:#7f8782;box-shadow:0 0 0 3px #7f878218}
+.home-status[data-state=online] .home-status-dot{background:#81db9d;box-shadow:0 0 0 3px #81db9d1c}
+.home-status[data-state=online]>svg{stroke:#9bdcb0}
+.home-status[data-state=offline] .home-status-dot{background:#e89b85;box-shadow:0 0 0 3px #e89b851c}
+.home-status[data-state=offline]>svg{stroke:#d9a296}
+.home-status[data-state=checking] .home-status-dot{background:#d4bc7e}
+@media(max-width:1020px){.home-status-copy strong{display:none}.home-status{padding:8px}.home-status>svg{width:20px;height:20px}}
+@media(max-width:600px){.home-statuses{gap:5px}.home-status-copy{display:none}.home-status{padding:8px 6px;gap:5px}}
 </style>
 </head>
 <body>
 <div class="shell">
 <header>
   <div class="brand"><span class="mark" aria-hidden="true">M</span><span>Miyora</span></div>
-  <div class="right"><button type="button" class="kb-launch" id="kb-open" aria-haspopup="dialog" aria-controls="kb-layer"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5.5C9.4 3.8 6.5 3.8 3 5v13.5c3.5-1.2 6.4-1.2 9 0.5 2.6-1.7 5.5-1.7 9-.5V5c-3.5-1.2-6.4-1.2-9 .5Z"/><path d="M12 5.5V19"/><path d="m16.5 9 1 1 2-2"/></svg><span>База знаний</span></button><button type="button" class="settings-launch" id="settings-open" aria-haspopup="dialog" aria-controls="settings-layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.9l-1.8 1.8a1.7 1.7 0 0 0-1.9-.34l-1.1.45-.3 2.1h-2.6l-.3-2.1-1.1-.45a1.7 1.7 0 0 0-1.9.34l-1.8-1.8A1.7 1.7 0 0 0 7.3 15l-.45-1.1-2.1-.3v-2.6l2.1-.3.45-1.1a1.7 1.7 0 0 0-.34-1.9l1.8-1.8a1.7 1.7 0 0 0 1.9.34l1.1-.45.3-2.1h2.6l.3 2.1 1.1.45a1.7 1.7 0 0 0 1.9-.34l1.8 1.8a1.7 1.7 0 0 0-.34 1.9l.45 1.1 2.1.3v2.6l-2.1.3z"/></svg><span>Настройки</span></button><span class="indicator" id="indicator" aria-hidden="true"></span><span id="status">Локальный режим</span></div>
+  <div class="right"><button type="button" class="kb-launch" id="kb-open" aria-haspopup="dialog" aria-controls="kb-layer"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5.5C9.4 3.8 6.5 3.8 3 5v13.5c3.5-1.2 6.4-1.2 9 0.5 2.6-1.7 5.5-1.7 9-.5V5c-3.5-1.2-6.4-1.2-9 .5Z"/><path d="M12 5.5V19"/><path d="m16.5 9 1 1 2-2"/></svg><span>База знаний</span></button><button type="button" class="settings-launch" id="settings-open" aria-haspopup="dialog" aria-controls="settings-layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.9l-1.8 1.8a1.7 1.7 0 0 0-1.9-.34l-1.1.45-.3 2.1h-2.6l-.3-2.1-1.1-.45a1.7 1.7 0 0 0-1.9.34l-1.8-1.8A1.7 1.7 0 0 0 7.3 15l-.45-1.1-2.1-.3v-2.6l2.1-.3.45-1.1a1.7 1.7 0 0 0-.34-1.9l1.8-1.8a1.7 1.7 0 0 0 1.9.34l1.1-.45.3-2.1h2.6l.3 2.1 1.1.45a1.7 1.7 0 0 0 1.9-.34l1.8 1.8a1.7 1.7 0 0 0-.34 1.9l.45 1.1 2.1.3v2.6l-2.1.3z"/></svg><span>Настройки</span></button><div class="home-statuses" aria-label="Состояние подключений">
+<button type="button" class="home-status" id="system-status" data-state="checking" aria-label="Проверить состояние системы" title="Нажмите для проверки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 12h3l2-4 3 8 2-4h1"/></svg><span class="home-status-copy"><strong>Система</strong><small id="status">Проверка…</small></span><i class="home-status-dot" id="indicator" aria-hidden="true"></i></button>
+<button type="button" class="home-status" id="api-status" data-state="checking" aria-label="Проверить подключение Cloud.ru API" title="Нажмите для проверки подключения"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h11a4 4 0 0 0 .4-8A6.5 6.5 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18Z"/><path d="m9 13 2 2 4-4"/></svg><span class="home-status-copy"><strong>API</strong><small id="api-status-text">Проверка…</small></span><i class="home-status-dot" aria-hidden="true"></i></button>
+</div></div>
 </header>
 <main>
   <div class="center">
@@ -343,7 +363,45 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
   </section>
 </div>
 <script>
-(async()=>{try{const r=await fetch('/api/health',{cache:'no-store'});if(!r.ok) return;const data=await r.json();if(data.status==='ok'){document.getElementById('indicator').classList.add('online');document.getElementById('status').textContent='Система активна';}}catch{}})();
+(function(){
+ const system=document.getElementById('system-status'),api=document.getElementById('api-status');
+ const systemText=document.getElementById('status'),apiText=document.getElementById('api-status-text');
+ let checking=false;
+ async function update(){
+  if(checking)return;checking=true;
+  system.dataset.state='checking';api.dataset.state='checking';
+  systemText.textContent='Проверка…';apiText.textContent='Проверка…';
+  try{
+   const response=await fetch('/api/health',{cache:'no-store',signal:AbortSignal.timeout(6000)});
+   if(!response.ok)throw Error('HTTP '+response.status);
+   const data=await response.json();if(data.status!=='ok')throw Error('unhealthy');
+   system.dataset.state='online';systemText.textContent='Активна';
+  }catch(error){
+   system.dataset.state='offline';systemText.textContent='Недоступна';
+   api.dataset.state='unknown';apiText.textContent='Неизвестно';checking=false;return;
+  }
+  try{
+   const response=await fetch('/api/status/connections',{cache:'no-store',signal:AbortSignal.timeout(6000)});
+   if(!response.ok)throw Error('HTTP '+response.status);
+   const data=await response.json();
+   if(data.api==='not_configured'){api.dataset.state='offline';apiText.textContent='Не настроен';checking=false;return}
+   if(data.api!=='configured')throw Error('configuration unavailable');
+   apiText.textContent='Проверка API…';
+   const verified=await fetch('/api/status/connections/check',{cache:'no-store',signal:AbortSignal.timeout(18000)});
+   if(!verified.ok)throw Error('HTTP '+verified.status);
+   const result=await verified.json();
+   api.dataset.state=result.api==='connected'?'online':'offline';
+   apiText.textContent=result.api==='connected'?'Подключён':'Нет соединения';
+   api.title=result.api==='connected'?'Cloud.ru отвечает':(result.reason||'Проверьте ключ в настройках');
+  }catch(error){api.dataset.state='unknown';apiText.textContent='Нет ответа';api.title='Не удалось проверить API'}
+  finally{checking=false}
+ }
+ system.onclick=update;api.onclick=update;
+ document.getElementById('settings-open').addEventListener('click',()=>{api.title='Cloud.ru API'});
+ document.getElementById('cloudru-form').addEventListener('submit',()=>{setTimeout(update,700)});
+ document.getElementById('cloudru-clear').addEventListener('click',()=>{setTimeout(update,700)});
+ update();document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});
+})();
 
 
 /* Single consistent outline icon language, no external icon fonts or assets. */
