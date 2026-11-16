@@ -542,6 +542,17 @@ class MiyoraTests(unittest.TestCase):
                       'aria-expanded', 'prefers-reduced-motion:reduce'):
             self.assertIn(token, html)
 
+    def test_neural_graph_intelligence(self):
+        with urlopen(self.base + "/") as response:
+            html = response.read().decode("utf-8")
+        for token in ('id="mz-graph-search"', 'id="mz-physics"',
+                      'id="mz-context-filter"', 'id="mz-context-note"',
+                      'function neighborhood(id)', 'function springStep(dt)',
+                      'function updateSearch()', 'function focusNode(p)',
+                      'const aggregate=zoom<.48', 'const faded=id=>',
+                      'ctx.globalAlpha=.14', 'physicsMoving'):
+            self.assertIn(token, html)
+
     def test_streaming_provider(self):
         from app.core import cloudru,chat
         cloudru.save_key("test-stream-key")
