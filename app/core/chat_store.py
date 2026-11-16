@@ -84,7 +84,7 @@ def graph(thread_id: int, limit: int = 160) -> dict | None:
     # Transparent lexical connections, not model-inferred knowledge or hidden reasoning.
     stopwords = {"это", "как", "что", "для", "или", "при", "the", "and", "with", "from", "you", "are", "мне", "могу", "нужно", "будет", "есть", "привет"}
     def terms(content):
-        return {term for term in re.findall(r"[^\\W_]{4,}", content.lower(), re.UNICODE)
+        return {term for term in re.findall(r"[^\W_]{4,}", content.lower(), re.UNICODE)
                 if term not in stopwords}
     groups = defaultdict(list)
     for node in nodes:
