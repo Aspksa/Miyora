@@ -532,6 +532,16 @@ class MiyoraTests(unittest.TestCase):
                       'grid-template-columns:minmax(0,3fr) minmax(340px,2fr)'):
             self.assertIn(token, html)
 
+    def test_mizuyori_motion_and_floating_controls(self):
+        with urlopen(self.base + "/") as response:
+            html = response.read().decode("utf-8")
+        for token in ('id="mz-panel-toggle"', 'id="mz-floating-panel"',
+                      'id="mz-camera-speed"', 'id="mz-signals"',
+                      'id="mz-center"', 'targetCamera', 'cameraSpeed',
+                      'signalsEnabled', 'const smooth=reduced?1:cameraSpeed',
+                      'aria-expanded', 'prefers-reduced-motion:reduce'):
+            self.assertIn(token, html)
+
     def test_streaming_provider(self):
         from app.core import cloudru,chat
         cloudru.save_key("test-stream-key")
