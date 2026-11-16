@@ -285,6 +285,59 @@ header .right .home-status-dot{margin-left:2px}
 @media(max-width:880px){header .right .home-status-copy strong{display:block}header .right .home-status-copy small{display:none}header .right .home-status{gap:7px}}
 @media(max-width:690px){header .right>.kb-launch,header .right>.settings-launch{width:42px;padding:0}header .right>.kb-launch span,header .right>.settings-launch span{display:none}header .right .home-status{width:42px;padding:0;gap:4px;justify-content:center}header .right .home-status-copy{display:none}header .right .home-status-dot{width:6px;height:6px;margin-left:0}}
 @media(max-width:390px){header{padding-left:12px;padding-right:12px}.brand{gap:7px;font-size:16px}.mark{width:28px;height:28px}header .right{gap:5px}header .right .home-statuses{gap:5px}header .right>.kb-launch,header .right>.settings-launch,header .right .home-status{width:36px;height:38px;min-height:38px}header .right .home-status>svg,header .right>.kb-launch svg,header .right>.settings-launch svg{width:18px;height:18px;flex-basis:18px}}
+
+/* Calm, editorial conversation workspace */
+.shell{height:100dvh;min-height:480px}
+.shell>header{flex:none;position:relative;z-index:2}
+.shell>footer{display:none}
+.chat-layout{flex:1;min-height:0;display:grid;grid-template-columns:244px minmax(0,1fr);padding:0;place-items:stretch;background:#111311}
+.chat-sidebar{min-height:0;display:flex;flex-direction:column;padding:24px 13px 15px;background:#171a17;border-right:1px solid #2a302a}
+.chat-side-title{display:flex;align-items:center;gap:9px;padding:0 11px 25px;color:#d9ded7;font-size:12px;font-weight:650}
+.chat-monogram{font-size:24px;color:#c7a782}
+.chat-new{display:flex;align-items:center;gap:10px;width:100%;border:1px solid #3b433a;border-radius:11px;padding:12px;color:#f1eee6;background:#272d26;text-align:left;cursor:pointer;font:inherit;font-size:12px;font-weight:600}
+.chat-new:hover{background:#333b32}
+.chat-new svg{width:17px;height:17px}
+.chat-side-label{margin:28px 11px 13px;font-size:10px;font-weight:700;letter-spacing:.14em;color:#7d897e}
+.chat-history{margin:0 3px;padding:11px 9px;background:#2b302a;border-radius:9px;color:#e0e4dc;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-side-foot{margin-top:auto;padding:16px 11px 0;color:#7c847b;font-size:11px}
+.chat-main{min-height:0;min-width:0;display:flex;flex-direction:column;background:#171917}
+.chat-top{flex:none;height:55px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;border-bottom:1px solid #282e28;font-size:12px;color:#e4e7e1}
+.chat-top-name{font-weight:650}.chat-top-chevron{color:#6d766c;margin:0 6px}
+.chat-top-model{color:#9da69a;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:45%}
+.chat-scroll{flex:1;min-height:0;overflow:auto;scrollbar-color:#3c443c transparent}
+.chat-welcome{width:min(690px,calc(100% - 40px));margin:max(70px,12vh) auto 40px}
+.chat-welcome-icon{width:58px;height:58px;border:1px solid #564a3c;border-radius:19px;background:#302921;color:#e1bc93;display:grid;place-items:center;margin-bottom:26px}
+.chat-welcome-icon svg{width:31px;height:31px}
+.chat-welcome h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(31px,4vw,46px);font-weight:400;letter-spacing:-1.5px;margin:0 0 12px;color:#f0ede5}
+.chat-welcome p{font-size:14px;line-height:1.7;color:#9da69b;margin:0}
+.chat-suggestions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:33px}
+.chat-suggestions button{min-height:76px;border:1px solid #353d34;border-radius:13px;padding:15px;background:#202520;color:#d8ded4;text-align:left;font:inherit;font-size:12px;cursor:pointer;display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.chat-suggestions button:hover{border-color:#a38c6f;background:#292c26}
+.chat-suggestions span{color:#b5a081}
+.chat-messages{max-width:760px;margin:0 auto;padding:25px 25px 45px;display:flex;flex-direction:column;gap:25px}
+.chat-message{display:flex;gap:14px;align-items:flex-start;min-width:0}
+.chat-avatar{flex:none;width:31px;height:31px;border-radius:10px;background:#3d3329;color:#e7c5a2;display:grid;place-items:center;font-size:19px}
+.chat-message[data-role=user]{justify-content:flex-end}
+.chat-message[data-role=user] .chat-bubble{background:#303730;border:1px solid #414b40;border-radius:16px 16px 4px 16px;max-width:min(85%,620px);padding:13px 16px}
+.chat-message[data-role=assistant] .chat-bubble{flex:1;min-width:0}
+.chat-message-label{display:block;font-size:11px;font-weight:700;color:#d9c3a5;margin-bottom:8px}
+.chat-message-text{font-size:14px;line-height:1.8;color:#e7e9e3;white-space:pre-wrap;overflow-wrap:anywhere}
+.chat-error{color:#e8b0a0}
+.chat-compose-wrap{flex:none;width:min(810px,calc(100% - 36px));margin:0 auto;padding:0 0 18px}
+.chat-composer{border:1px solid #535a4c;border-radius:17px;background:#252b24;padding:14px 16px 11px;box-shadow:0 12px 45px #0002}
+.chat-composer:focus-within{border-color:#b5a58a}
+.chat-input-label{display:none}
+.chat-composer textarea{width:100%;min-height:58px;max-height:170px;resize:vertical;border:0;outline:0;background:transparent;color:#f1f0e8;font:inherit;font-size:14px;line-height:1.6}
+.chat-composer textarea::placeholder{color:#9ba396}
+.chat-compose-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.chat-hint{font-size:10px;color:#8e998d}
+.chat-compose-actions button{width:34px;height:34px;flex:none;border:0;border-radius:10px;background:#d6b99a;color:#252019;display:grid;place-items:center;cursor:pointer}
+.chat-compose-actions button:hover{background:#efd2b0}
+.chat-compose-actions button:disabled{opacity:.4;cursor:default}
+.chat-compose-actions svg{width:19px;height:19px}
+.chat-disclaimer{text-align:center;color:#778075;font-size:10px;margin:9px 0 0}
+@media(max-width:850px){.chat-layout{grid-template-columns:180px minmax(0,1fr)}.chat-suggestions{grid-template-columns:1fr}.chat-suggestions button{min-height:48px}.chat-welcome{margin-top:45px}}
+@media(max-width:640px){.chat-layout{grid-template-columns:minmax(0,1fr)}.chat-sidebar{display:none}.chat-top{padding:0 17px}.chat-welcome{margin-top:45px}.chat-messages{padding:20px 15px}.chat-hint{font-size:9px}}
 </style>
 </head>
 <body>
@@ -296,14 +349,33 @@ header .right .home-status-dot{margin-left:2px}
 <button type="button" class="home-status" id="api-status" data-state="checking" aria-label="Проверить подключение Cloud.ru API" title="Нажмите для проверки подключения"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h11a4 4 0 0 0 .4-8A6.5 6.5 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18Z"/><path d="m9 13 2 2 4-4"/></svg><span class="home-status-copy"><strong>API</strong><small id="api-status-text">Проверка…</small></span><i class="home-status-dot" aria-hidden="true"></i></button>
 </div></div>
 </header>
-<main>
-  <div class="center">
-    <div class="symbol" aria-hidden="true">
-      <svg viewBox="0 0 48 48" fill="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 34V14l16 16 16-16v20"/><path d="M8 14l16 16 16-16" opacity=".3"/></svg>
+<main class="chat-layout" id="chat-app">
+  <aside class="chat-sidebar" aria-label="Навигация чата">
+    <div class="chat-side-title"><span class="chat-monogram">✳</span><span>Рабочее пространство</span></div>
+    <button type="button" class="chat-new" id="chat-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Новый чат</button>
+    <div class="chat-side-label">СЕЙЧАС</div>
+    <div class="chat-history" id="chat-history"><span>Новый диалог</span></div>
+    <div class="chat-side-foot">Miyora · локальное приложение</div>
+  </aside>
+  <section class="chat-main" aria-label="AI-чат">
+    <div class="chat-top"><span class="chat-top-name">Miyora <span class="chat-top-chevron">/</span> Чат</span><span class="chat-top-model" id="chat-model">Cloud.ru</span></div>
+    <div class="chat-scroll" id="chat-scroll" aria-live="polite">
+      <div class="chat-welcome" id="chat-welcome">
+        <div class="chat-welcome-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 34V14l16 16 16-16v20"/><path d="M8 14l16 16 16-16" opacity=".3"/></svg></div>
+        <h1>С чего начнём?</h1><p>Спросите о коде, идеях или задачах вашего проекта.</p>
+        <div class="chat-suggestions"><button type="button" data-prompt="Помоги спланировать следующий этап моего проекта.">Спланировать проект <span>↗</span></button><button type="button" data-prompt="Объясни сложную тему простыми словами.">Объяснить тему <span>↗</span></button><button type="button" data-prompt="Помоги найти ошибку в коде.">Разобрать код <span>↗</span></button></div>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
     </div>
-    <h1>Miyora</h1>
-    <p class="subtitle">Пространство для новых идей.</p>
-  </div>
+    <div class="chat-compose-wrap">
+      <form class="chat-composer" id="chat-form">
+        <label class="chat-input-label" for="chat-input">Сообщение для Miyora</label>
+        <textarea id="chat-input" rows="2" maxlength="12000" placeholder="Напишите сообщение…" aria-label="Сообщение для Miyora"></textarea>
+        <div class="chat-compose-actions"><span class="chat-hint" id="chat-hint">Enter — отправить · Shift+Enter — новая строка</span><button type="submit" id="chat-send" aria-label="Отправить сообщение" title="Отправить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div>
+      </form>
+      <p class="chat-disclaimer">Ответы AI могут содержать ошибки. Проверяйте важную информацию.</p>
+    </div>
+  </section>
 </main>
 <footer><span>© Miyora</span><span>Версия 0.2 · Локальное приложение</span></footer>
 </div>
@@ -737,6 +809,47 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  };
  async function refreshKeyStatus(){const data=await request('/api/settings/cloudru');$('cloudru-key-status').textContent=data.has_key?'Ключ сохранён · '+data.key_storage:'Ключ не сохранён'}
  $('cloudru-clear').onclick=async()=>{if(!confirm('Удалить сохранённый ключ Cloud.ru?'))return;try{await request('/api/settings/cloudru',{clear_key:true});$('cloudru-key').value='';await refresh();status('Ключ удалён')}catch(error){status('Ошибка: '+error.message)}};
+})();
+
+(function(){
+ const $=id=>document.getElementById(id);
+ const form=$('chat-form'),input=$('chat-input'),send=$('chat-send'),messages=$('chat-messages');
+ let history=[],busy=false,session=0;
+ const errorText={api_key_required:'Добавьте API-ключ Cloud.ru в настройках.',model_required:'Выберите модель Cloud.ru в настройках.',cloudru_auth_failed:'Ключ Cloud.ru отклонён. Проверьте настройки.',cloudru_unavailable:'Cloud.ru сейчас недоступен. Попробуйте позже.',invalid_chat_response:'Модель вернула неожиданный ответ.'};
+ function render(role,content,isError=false){
+  const item=document.createElement('article');item.className='chat-message';item.dataset.role=role;
+  if(role==='assistant'){const avatar=document.createElement('span');avatar.className='chat-avatar';avatar.textContent='✳';avatar.setAttribute('aria-hidden','true');item.append(avatar)}
+  const bubble=document.createElement('div');bubble.className='chat-bubble';
+  if(role==='assistant'){const label=document.createElement('span');label.className='chat-message-label';label.textContent='Miyora';bubble.append(label)}
+  const text=document.createElement('div');text.className='chat-message-text';if(isError)text.classList.add('chat-error');text.textContent=content;bubble.append(text);item.append(bubble);messages.append(item);
+  $('chat-scroll').scrollTop=$('chat-scroll').scrollHeight;return text;
+ }
+ async function refreshModel(){
+  try{const r=await fetch('/api/settings/cloudru',{cache:'no-store'});if(!r.ok)return;const data=await r.json();$('chat-model').textContent=data.model||'Модель не выбрана'}catch{}
+ }
+ async function submit(){
+  const value=input.value.trim();if(!value||busy)return;
+  busy=true;send.disabled=true;input.disabled=true;$('chat-welcome').hidden=true;
+  input.value='';history.push({role:'user',content:value});
+  if(history.length===1)$('chat-history').textContent=value.slice(0,42);
+  render('user',value);const placeholder=render('assistant','Думаю…');
+  const active=session;
+  try{
+   const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history.slice(-30)})});
+   const data=await response.json();
+   if(!response.ok)throw Error(data.error||'Ошибка HTTP '+response.status);
+   if(active!==session)return;
+   placeholder.textContent=data.message||'Пустой ответ';
+   history.push({role:'assistant',content:data.message||''});
+   $('chat-model').textContent=data.model||$('chat-model').textContent;
+  }catch(error){if(active===session){placeholder.textContent=errorText[error.message]||'Не удалось получить ответ: '+error.message;placeholder.classList.add('chat-error');history.pop()}}
+  finally{if(active===session){busy=false;send.disabled=false;input.disabled=false;input.focus()}}
+ }
+ form.addEventListener('submit',event=>{event.preventDefault();submit()});
+ input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();submit()}});
+ $('chat-new').addEventListener('click',()=>{session++;history=[];busy=false;messages.replaceChildren();$('chat-welcome').hidden=false;$('chat-history').textContent='Новый диалог';input.disabled=false;send.disabled=false;input.value='';input.focus();refreshModel()});
+ document.querySelectorAll('[data-prompt]').forEach(button=>button.addEventListener('click',()=>{input.value=button.dataset.prompt;input.focus()}));
+ refreshModel();
 })();
 </script>
 </body>
