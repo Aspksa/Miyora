@@ -81,6 +81,14 @@ class MiyoraTests(unittest.TestCase):
                     start.assert_called_once()
                     fallback.assert_not_called()
 
+    def test_favicon(self):
+        with urlopen(self.base + "/favicon.svg") as response:
+            self.assertEqual(response.status, 200)
+            self.assertIn("image/svg+xml", response.headers["Content-Type"])
+            self.assertIn(b"<svg", response.read())
+        with urlopen(self.base + "/favicon.ico") as response:
+            self.assertEqual(response.status, 200)
+
     def test_homepage(self):
         with urlopen(self.base + "/") as response:
             self.assertIn(b"Miyora", response.read())
