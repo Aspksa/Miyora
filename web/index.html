@@ -27,6 +27,16 @@ h1{font-size:clamp(42px,7vw,68px);font-weight:570;letter-spacing:-3px;line-heigh
 footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-between;gap:12px;color:#555;font-size:12px;border-top:1px solid #181818}
 @media(max-width:480px){header{height:68px}footer{flex-direction:column;align-items:center}.center{transform:translateY(-8px)}}
 @media(prefers-reduced-motion:no-preference){.symbol{animation:appear .8s ease both}.center h1,.subtitle{animation:appear 1s ease both}@keyframes appear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}}
+.db-panel{width:min(760px,100%);margin:0 auto 48px;padding:24px;border:1px solid #252525;border-radius:18px;background:#111}
+.db-panel h2{font-size:18px;font-weight:550;margin:0 0 14px}
+.db-tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.db-panel input,.db-panel textarea{background:#090909;border:1px solid #303030;color:#eee;border-radius:8px;padding:10px;font:inherit;min-width:0}
+.db-panel input{flex:1}.db-panel textarea{width:100%;resize:vertical}
+.db-panel button{border:1px solid #444;border-radius:8px;padding:10px 13px;background:#242424;color:#eee;cursor:pointer}
+.db-panel button:hover{background:#333}.db-panel button:focus-visible{outline:2px solid #aaa}
+.db-row{padding:12px 0;border-top:1px solid #262626;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.db-row strong{display:block;overflow-wrap:anywhere}.db-row small{color:#888}
+.db-row button{padding:6px 9px}.db-msg{font-size:12px;color:#aaa;min-height:20px}
 </style>
 </head>
 <body>
@@ -44,10 +54,79 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
     <p class="subtitle">Пространство для новых идей.</p>
   </div>
 </main>
+<section class="db-panel" aria-label="Управление заметками">
+  <h2>База данных</h2>
+  <p class="db-msg" id="db-stats">Загрузка состояния...</p>
+  <div class="db-tools">
+    <input id="db-search" placeholder="Поиск заметок" aria-label="Поиск заметок">
+    <button id="db-refresh" type="button">Обновить</button>
+    <button id="db-backup" type="button">Резервная копия</button>
+    <button id="db-trash" type="button">Корзина</button>
+  </div>
+  <form id="db-form">
+    <div class="db-tools"><input id="db-title" maxlength="200" required placeholder="Название заметки"><button type="submit" id="db-save">Сохранить</button></div>
+    <textarea id="db-content" maxlength="100000" rows="3" placeholder="Содержание"></textarea>
+    <button type="button" id="db-cancel" hidden>Отменить изменение</button>
+  </form>
+  <p id="db-message" class="db-msg" role="status"></p>
+  <div id="db-list" aria-live="polite"></div>
+</section>
 <footer><span>© Miyora</span><span>Версия 0.2 · Локальное приложение</span></footer>
 </div>
 <script>
 (async()=>{try{const r=await fetch('/api/health',{cache:'no-store'});if(!r.ok) return;const data=await r.json();if(data.status==='ok'){document.getElementById('indicator').classList.add('online');document.getElementById('status').textContent='Система активна';}}catch{}})();
+
+const $=id=>document.getElementById(id);
+let editId=null,trash=false;
+async function api(path,method='GET',data){
+  const r=await fetch(path,{method,headers:{'Content-Type':'application/json'},body:data===undefined?undefined:JSON.stringify(data)});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
+}
+function message(value){$('db-message').textContent=value}
+async function refreshNotes(){
+  try{
+    const stats=await api('/api/db/stats');
+    $('db-stats').textContent='Активных записей: '+stats.total+' · В корзине: '+stats.deleted+' · Размер: '+stats.bytes+' байт · Схема: '+stats.schema_version;
+    const result=await api('/api/notes?search='+encodeURIComponent($('db-search').value)+'&deleted='+(trash?'1':'0'));
+    const root=$('db-list');root.replaceChildren();
+    for(const note of result.notes){
+      if(Boolean(note.deleted_at)!==trash)continue;
+      const row=document.createElement('div');row.className='db-row';
+      const info=document.createElement('div');
+      const name=document.createElement('strong');name.textContent=note.title;
+      const summary=document.createElement('small');summary.textContent=(note.content||'').slice(0,120);
+      info.append(name,summary);row.append(info);
+      const controls=document.createElement('div');controls.className='db-tools';
+      const button=document.createElement('button');button.type='button';
+      button.textContent=trash?'Восстановить':'Изменить';
+      button.onclick=async()=>{
+        if(trash){await api('/api/notes/'+note.id+'/restore','POST');message('Заметка восстановлена');await refreshNotes();return}
+        editId=note.id;$('db-title').value=note.title;$('db-content').value=note.content;$('db-cancel').hidden=false;$('db-title').focus();
+      };controls.append(button);
+      if(!trash){
+        const del=document.createElement('button');del.type='button';del.textContent='В корзину';
+        del.onclick=async()=>{await api('/api/notes/'+note.id,'DELETE');await refreshNotes()};
+        controls.append(del);
+      }
+      row.append(controls);root.append(row);
+    }
+  }catch(e){message('Ошибка базы: '+e.message)}
+}
+$('db-form').onsubmit=async e=>{
+  e.preventDefault();
+  try{
+    const data={title:$('db-title').value,content:$('db-content').value};
+    await api(editId?'/api/notes/'+editId:'/api/notes',editId?'PUT':'POST',data);
+    editId=null;$('db-form').reset();$('db-cancel').hidden=true;message('Сохранено');await refreshNotes();
+  }catch(e){message('Не удалось сохранить: '+e.message)}
+};
+$('db-cancel').onclick=()=>{editId=null;$('db-form').reset();$('db-cancel').hidden=true};
+$('db-refresh').onclick=refreshNotes;
+$('db-search').oninput=()=>refreshNotes();
+$('db-trash').onclick=()=>{trash=!trash;$('db-trash').textContent=trash?'Все заметки':'Корзина';refreshNotes()};
+$('db-backup').onclick=async()=>{try{const r=await api('/api/db/backup','POST');message('Резервная копия: '+r.backup)}catch(e){message('Ошибка копирования: '+e.message)}};
+refreshNotes();
 </script>
 </body>
 </html>
