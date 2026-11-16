@@ -70,6 +70,7 @@ def graph(thread_id: int, limit: int = 160) -> dict | None:
     nodes = [
         {"id": "message-" + str(row["id"]), "message_id": row["id"],
          "role": row["role"], "label": row["content"][:100],
+         "content": row["content"][:4000],
          "created_at": row["created_at"]}
         for row in rows
     ]
