@@ -101,7 +101,8 @@ try {
   Set-Location -LiteralPath $appDir
   $env:PORT = '0'
   $env:HOST = '127.0.0.1'
-  Log (($(if ($Doctor) { 'Running Miyora doctor from: ' } else { 'Starting Miyora from: ' })) + $appDir)
+  if ($Doctor) { Log ('Running Miyora doctor from: ' + $appDir) }
+  else { Log ('Starting Miyora from: ' + $appDir) }
   & $program @arguments
   $code = $LASTEXITCODE
   Log ('Miyora exited with code ' + $code)
