@@ -178,6 +178,19 @@ class MiyoraTests(unittest.TestCase):
         self.assertIn("setPointerCapture", page)
         self.assertIn("max-width:100vw", page)
 
+    def test_database_moved_into_knowledge_window(self):
+        with urlopen(self.base + "/") as response:
+            page = response.read().decode("utf-8")
+        homepage = page.split('<div id="kb-layer"', 1)[0]
+        knowledge = page.split('<div id="kb-layer"', 1)[1].split('</script>', 1)[0]
+        self.assertNotIn('class="db-panel"', homepage)
+        self.assertNotIn('id="db-form"', homepage)
+        self.assertIn('id="db-form"', knowledge)
+        self.assertIn('id="kb-tree"', knowledge)
+        self.assertIn('id="kb-tables"', knowledge)
+        self.assertIn('id="db-list"', knowledge)
+        self.assertIn('id="kb-refresh-all"', knowledge)
+
     def test_homepage(self):
         with urlopen(self.base + "/") as response:
             self.assertIn(b"Miyora", response.read())

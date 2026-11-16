@@ -94,6 +94,97 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
 .kb-empty{color:#aaa3b8;font-size:12px;padding:15px}
 @container(max-width:560px){.kb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.kb-split{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:560px){.kb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.kb-split{grid-template-columns:minmax(0,1fr)}}
+
+/* Knowledge Studio / restrained editorial workspace */
+.kb-window{width:min(1250px,calc(100vw - 36px));height:min(850px,calc(100dvh - 36px));min-width:340px;min-height:400px;border:1px solid #393b46;border-radius:19px;background:#0c0e12}
+.kb-head{background:#111319;border-bottom-color:#272a32;padding:13px 19px}
+.kb-title svg{stroke:#d7f4ba}.kb-title small{color:#858e97}
+.kb-studio{display:block;padding:24px;overflow:auto;background:radial-gradient(ellipse at 80% 0%,#1d25221a,transparent 48%),#0c0e12}
+.kb-topline{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}
+.kb-eyebrow{display:block;font-size:9px;font-weight:750;letter-spacing:.17em;color:#84918b;margin-bottom:8px}
+.kb-intro-title h2{font-size:clamp(25px,3vw,37px);font-weight:620;letter-spacing:-1.7px;margin:0 0 6px;color:#f2f5f0}
+.kb-intro-title p{font-size:12px;color:#8c9696;margin:0}
+.kb-accent{color:#b9e99d}
+.kb-refresh-all,.kb-backup{border:1px solid #3c4441;background:#1c2421;border-radius:10px;color:#d8ebd0;padding:10px 13px;cursor:pointer;font:inherit;font-size:11px;white-space:nowrap}
+.kb-refresh-all:hover,.kb-backup:hover{border-color:#9dc78e}
+.kb-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.kb-metric{padding:16px 18px;border:1px solid #292e31;border-radius:13px;background:#14181b;min-height:106px}
+.kb-metric span{font-size:9px;font-weight:700;letter-spacing:.14em;color:#84918b}
+.kb-metric strong{display:block;font-size:clamp(22px,2.6vw,32px);font-weight:650;letter-spacing:-1.4px;color:#f2f5f0;margin:9px 0 2px}
+.kb-metric small{font-size:10px;color:#76817e}
+.kb-workspace{display:grid;grid-template-columns:minmax(220px,29%) minmax(0,1fr);align-items:start;gap:12px}
+.kb-project-rail,.kb-data-section,.kb-memory-section{border:1px solid #292e31;border-radius:14px;background:#13171a;padding:17px;min-width:0}
+.kb-project-rail{position:sticky;top:0}
+.kb-main-stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+.kb-section-head{margin-bottom:16px;align-items:center}
+.kb-section-head h3{font-size:16px;font-weight:620;letter-spacing:-.4px;color:#edf1eb;margin:0}
+.kb-section-head .kb-eyebrow{margin-bottom:6px}
+.kb-tree{background:#0e1215;border:1px solid #292e31;border-radius:10px;max-height:430px;min-height:200px;overflow:auto;padding:7px}
+.kb-node{border-radius:7px;color:#c6d0cb;font-size:11px;padding-top:9px;padding-bottom:9px}
+.kb-node:hover,.kb-node[aria-selected=true]{background:#26332a}
+.kb-node[aria-selected=true]{color:#d5f5bf}
+.kb-node .kb-glyph{color:#a2c795}.kb-node .kb-size{color:#72817b;font-size:10px}
+.kb-file-inspector{margin-top:10px;padding:15px;background:#19201e;border:1px solid #303a34;border-radius:10px;min-height:105px}
+.kb-file-inspector strong{display:block;color:#e5eee4;font-size:12px;overflow-wrap:anywhere}
+.kb-file-inspector p{font-size:11px;color:#93a19a;line-height:1.6;margin-bottom:0;overflow-wrap:anywhere}
+.kb-tables{display:flex;gap:8px;overflow:auto;padding-bottom:10px;scrollbar-width:thin}
+.kb-table-choice{flex:0 0 145px;min-height:71px;background:#1a2022;border:1px solid #343b3e;border-radius:10px;padding:12px;gap:7px}
+.kb-table-choice strong{font-size:12px;overflow:hidden;text-overflow:ellipsis}
+.kb-table-choice span{color:#8b9a93;font-size:10px}
+.kb-table-choice[aria-pressed=true]{background:#233428;border-color:#9cc98a}
+.kb-live{font-size:9px;letter-spacing:.1em;color:#a8d89c;border:1px solid #3b5a3c;border-radius:100px;padding:6px 9px;white-space:nowrap}
+.kb-dataset-bar{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:10px 0}
+.kb-dataset-bar strong{font-size:13px;color:#e4ebe4}
+.kb-mode-switch{display:flex;gap:3px;border:1px solid #30383a;background:#0e1215;padding:3px;border-radius:9px}
+.kb-mode-switch button{border:0;background:transparent;border-radius:6px;padding:7px 10px;color:#93a29b;font-size:11px;cursor:pointer}
+.kb-mode-switch button[aria-pressed=true]{background:#303c33;color:#d8f4cb}
+.kb-table-scroll{max-height:310px;overflow:auto;border:1px solid #30383a;border-radius:9px;background:#101416}
+.kb-data-table{font-size:11px}
+.kb-data-table th{background:#1f2926;color:#a9c9a8}
+.kb-data-table td{color:#c8d2cb}
+.kb-data-table th,.kb-data-table td{border-bottom-color:#27302d}
+.kb-pagination{margin:10px 0 0}
+.kb-pagination button{padding:6px 11px;background:#202a25;border:1px solid #344239}
+.kb-memory-section.db-panel{width:auto;margin:0;padding:17px;background:#13171a;border-color:#292e31}
+.kb-memory-controls{display:flex;gap:7px;margin-bottom:11px}
+.kb-memory-section input,.kb-memory-section textarea{background:#0d1114;border:1px solid #323b39;border-radius:8px;color:#e7f0e8;font:inherit;font-size:12px;padding:11px;min-width:0}
+.kb-memory-controls input{flex:1}
+.kb-memory-section button{border:1px solid #38453c;border-radius:8px;background:#232e27;color:#d7e8d4;cursor:pointer;padding:9px 12px;font:inherit;font-size:11px}
+.kb-memory-section button:hover{background:#304235}
+.kb-note-editor{display:grid;gap:8px;background:#101517;border:1px solid #2d3733;border-radius:10px;padding:11px}
+.kb-note-editor input,.kb-note-editor textarea{width:100%}
+.kb-note-editor textarea{resize:vertical;min-height:76px}
+.kb-editor-actions{display:flex;justify-content:flex-end;gap:8px}
+.kb-editor-actions #db-save{background:#b8e4a0;border-color:#b8e4a0;color:#1a291b;font-weight:700}
+.kb-note-status{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:12px 0}
+.kb-note-status .db-msg{font-size:10px;color:#8c9b92}
+.kb-note-list{max-height:300px;overflow:auto}
+.kb-note-list .db-row{border-top:1px solid #2a332f;padding:12px 3px;align-items:start}
+.kb-note-list .db-row strong{font-size:12px;color:#edf3ec}
+.kb-note-list .db-row small{display:block;font-size:11px;line-height:1.5;margin-top:5px;overflow-wrap:anywhere}
+.kb-note-list .db-tools{margin:0;flex-shrink:0}
+.kb-note-list .db-tools button{padding:7px 9px}
+.kb-foot{background:#101417;border-top-color:#272e2b}
+@container(max-width:750px){.kb-workspace{grid-template-columns:minmax(0,1fr)}.kb-project-rail{position:static}.kb-tree{max-height:260px;min-height:140px}}
+@container(max-width:540px){.kb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.kb-studio{padding:13px}.kb-topline{margin-bottom:15px}.kb-window{min-width:0}.kb-metric{min-height:92px;padding:12px}.kb-intro-title h2{font-size:27px}.kb-note-list .db-row{flex-wrap:wrap}}
+@media(max-width:560px){.kb-workspace{grid-template-columns:minmax(0,1fr)}.kb-project-rail{position:static}.kb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.kb-studio{padding:12px}.kb-window{min-width:0;width:calc(100vw - 14px)}}
+
+/* SVG icon system: crisp at every scale, consistent 1.7px outline */
+.kb-icon{width:16px;height:16px;flex:none;display:inline-block;vertical-align:middle;color:#a9d29e}
+.kb-section-head h3,.kb-refresh-all,.kb-backup,.kb-mode-switch button,.kb-memory-section button,.kb-pagination button{display:inline-flex;align-items:center;gap:8px}
+.kb-metric{position:relative}
+.kb-metric>.kb-icon{position:absolute;right:15px;top:15px;width:18px;height:18px;color:#7f9b85}
+.kb-node .kb-glyph{display:inline-flex;align-items:center;justify-content:center}
+.kb-node .kb-glyph .kb-icon{width:15px;height:15px;color:#9ac68c}
+.kb-table-choice>.kb-icon{width:17px;height:17px;color:#a8cfa3}
+.kb-table-choice{position:relative;padding-left:36px}
+.kb-table-choice>.kb-icon{position:absolute;left:11px;top:12px}
+.kb-note-list .db-row strong{display:flex;align-items:center;gap:7px}
+.kb-note-list .db-row strong .kb-icon{width:14px;height:14px}
+.kb-memory-section .db-tools button{display:inline-flex;align-items:center;gap:6px}
+.kb-memory-section .db-tools button .kb-icon{width:13px;height:13px}
+.kb-editor-actions #db-save .kb-icon{color:#294b29}
+.kb-pagination button .kb-icon{width:15px;height:15px}
 </style>
 </head>
 <body>
@@ -111,23 +202,6 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
     <p class="subtitle">Пространство для новых идей.</p>
   </div>
 </main>
-<section class="db-panel" aria-label="Управление заметками">
-  <h2>База данных</h2>
-  <p class="db-msg" id="db-stats">Загрузка состояния...</p>
-  <div class="db-tools">
-    <input id="db-search" placeholder="Поиск заметок" aria-label="Поиск заметок">
-    <button id="db-refresh" type="button">Обновить</button>
-    <button id="db-backup" type="button">Резервная копия</button>
-    <button id="db-trash" type="button">Корзина</button>
-  </div>
-  <form id="db-form">
-    <div class="db-tools"><input id="db-title" maxlength="200" required placeholder="Название заметки"><button type="submit" id="db-save">Сохранить</button></div>
-    <textarea id="db-content" maxlength="100000" rows="3" placeholder="Содержание"></textarea>
-    <button type="button" id="db-cancel" hidden>Отменить изменение</button>
-  </form>
-  <p id="db-message" class="db-msg" role="status"></p>
-  <div id="db-list" aria-live="polite"></div>
-</section>
 <footer><span>© Miyora</span><span>Версия 0.2 · Локальное приложение</span></footer>
 </div>
 <div id="kb-layer" class="kb-layer" hidden>
@@ -137,31 +211,44 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
       <div class="kb-title"><svg viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 7C12 4.5 8 4.5 4 6v19c4-1.5 8-1.5 12 1 4-2.5 8-2.5 12-1V6c-4-1.5-8-1.5-12 1Z"/><path d="M16 7v19"/><path d="m21 12 2 2 4-4"/></svg><div><strong id="kb-heading">База знаний</strong><small>Личное пространство Miyora</small></div></div>
       <button type="button" class="kb-close" id="kb-close" aria-label="Закрыть базу знаний">×</button>
     </div>
-    <div class="kb-content">
-      <div class="kb-metrics" aria-label="Состояние проекта">
-        <div class="kb-metric"><strong id="kb-count">—</strong><span>Записи</span></div>
-        <div class="kb-metric"><strong id="kb-dbsize">—</strong><span>SQLite + WAL / SHM</span></div>
-        <div class="kb-metric"><strong id="kb-tablecount">—</strong><span>Таблицы</span></div>
-        <div class="kb-metric"><strong id="kb-projectsize">—</strong><span>Размер проекта</span></div>
+    <div class="kb-content kb-studio">
+      <div class="kb-topline">
+        <div class="kb-intro-title"><span class="kb-eyebrow">MIYORA / LOCAL INTELLIGENCE</span><h2>Центр знаний<span class="kb-accent">.</span></h2><p>Файлы, данные и память проекта — в одном пространстве.</p></div>
+        <button type="button" class="kb-refresh-all" id="kb-refresh-all" aria-label="Обновить базу знаний">↻ <span>Обновить</span></button>
       </div>
-      <section class="kb-section" aria-labelledby="kb-files-heading">
-        <div class="kb-section-head"><h3 id="kb-files-heading">◈ Структура проекта</h3><span class="kb-muted" id="kb-filecount">Сканирование…</span></div>
-        <div class="kb-split">
+      <div class="kb-metrics" aria-label="Состояние проекта">
+        <div class="kb-metric"><span>ЗАПИСИ</span><strong id="kb-count">—</strong><small>В памяти проекта</small></div>
+        <div class="kb-metric"><span>ХРАНИЛИЩЕ</span><strong id="kb-dbsize">—</strong><small>SQLite / WAL / SHM</small></div>
+        <div class="kb-metric"><span>ТАБЛИЦЫ</span><strong id="kb-tablecount">—</strong><small>Структура данных</small></div>
+        <div class="kb-metric"><span>ПРОЕКТ</span><strong id="kb-projectsize">—</strong><small>Файлы и каталоги</small></div>
+      </div>
+      <div class="kb-workspace">
+        <aside class="kb-project-rail" aria-labelledby="kb-files-heading">
+          <div class="kb-section-head"><div><span class="kb-eyebrow">01 / EXPLORER</span><h3 id="kb-files-heading">Структура проекта</h3></div><span class="kb-muted" id="kb-filecount">…</span></div>
           <div class="kb-tree" id="kb-tree" aria-label="Файлы и каталоги"></div>
-          <div class="kb-detail" id="kb-file-detail"><strong>Выберите файл или каталог</strong><p>Здесь появятся путь, размер и тип объекта.</p></div>
+          <div class="kb-file-inspector" id="kb-file-detail"><span class="kb-eyebrow">INSPECTOR</span><strong>Объект не выбран</strong><p>Нажмите на файл или каталог, чтобы увидеть сведения.</p></div>
+        </aside>
+        <div class="kb-main-stack">
+          <section class="kb-data-section" aria-labelledby="kb-tables-heading">
+            <div class="kb-section-head"><div><span class="kb-eyebrow">02 / DATABASE</span><h3 id="kb-tables-heading">Данные SQLite</h3></div><span class="kb-live">● READ ONLY</span></div>
+            <div class="kb-tables" id="kb-tables"></div>
+            <div class="kb-dataset-bar"><div><span class="kb-eyebrow">DATASET</span><strong id="kb-selected-table">Выберите таблицу</strong></div><div class="kb-mode-switch"><button id="kb-show-records" type="button" aria-pressed="true">Записи</button><button id="kb-show-fields" type="button" aria-pressed="false">Структура</button></div></div>
+            <div class="kb-table-scroll"><table class="kb-data-table" id="kb-data-table"></table></div>
+            <div class="kb-toolbar kb-pagination"><span class="kb-muted" id="kb-page-label"></span><div><button id="kb-prev" type="button">←</button><button id="kb-next" type="button">→</button></div></div>
+          </section>
+          <section class="kb-memory-section db-panel" aria-labelledby="kb-memory-heading">
+            <div class="kb-section-head"><div><span class="kb-eyebrow">03 / MEMORY</span><h3 id="kb-memory-heading">Память проекта</h3></div><button type="button" id="db-backup" class="kb-backup">Резервная копия ↗</button></div>
+            <div class="kb-memory-controls"><input id="db-search" type="search" placeholder="Поиск по памяти…" aria-label="Поиск заметок"><button id="db-refresh" type="button">↻</button><button id="db-trash" type="button">Корзина</button></div>
+            <form id="db-form" class="kb-note-editor">
+              <input id="db-title" maxlength="200" required placeholder="Заголовок новой записи">
+              <textarea id="db-content" maxlength="100000" rows="3" placeholder="Мысли, решения, важные детали проекта…"></textarea>
+              <div class="kb-editor-actions"><button type="button" id="db-cancel" hidden>Отменить</button><button type="submit" id="db-save">+ Сохранить запись</button></div>
+            </form>
+            <div class="kb-note-status"><span id="db-stats" class="db-msg">Загрузка…</span><span id="db-message" class="db-msg" role="status"></span></div>
+            <div id="db-list" class="kb-note-list" aria-live="polite"></div>
+          </section>
         </div>
-      </section>
-      <section class="kb-section" aria-labelledby="kb-tables-heading">
-        <div class="kb-section-head"><h3 id="kb-tables-heading">▦ Таблицы SQLite</h3><span class="kb-muted">Только чтение · реальные данные</span></div>
-        <div class="kb-tables" id="kb-tables"></div>
-        <div class="kb-toolbar"><strong id="kb-selected-table">Выберите таблицу</strong><div><button id="kb-show-records" type="button">Записи</button> <button id="kb-show-fields" type="button">Поля</button></div></div>
-        <div class="kb-table-scroll"><table class="kb-data-table" id="kb-data-table"></table></div>
-        <div class="kb-toolbar"><span class="kb-muted" id="kb-page-label"></span><div><button id="kb-prev" type="button">← Назад</button> <button id="kb-next" type="button">Далее →</button></div></div>
-      </section>
-      <section class="kb-section" aria-labelledby="kb-memory-heading">
-        <div class="kb-section-head"><h3 id="kb-memory-heading">✦ Память проекта</h3><span class="kb-muted">Сохранённые записи</span></div>
-        <p class="kb-muted">Заметки Miyora доступны в редакторе базы данных на главной странице. Здесь отображаются таблицы и фактические данные проекта.</p>
-      </section>
+      </div>
       <p class="kb-muted" id="kb-error" role="status"></p>
     </div>
     <div class="kb-foot"><span>MIYORA / KNOWLEDGE</span><span>Перетащите заголовок · Измените размер ↘</span></div>
@@ -169,6 +256,49 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
 </div>
 <script>
 (async()=>{try{const r=await fetch('/api/health',{cache:'no-store'});if(!r.ok) return;const data=await r.json();if(data.status==='ok'){document.getElementById('indicator').classList.add('online');document.getElementById('status').textContent='Система активна';}}catch{}})();
+
+
+/* Single consistent outline icon language, no external icon fonts or assets. */
+const KB_ICONS={
+ refresh:'<path d="M20 11a8 8 0 1 0-2.3 6"/><path d="M20 4v7h-7"/>',
+ folder:'<path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z"/>',
+ file:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/>',
+ code:'<path d="m8 9-3 3 3 3m8-6 3 3-3 3"/>',
+ database:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/>',
+ table:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/>',
+ rows:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+ schema:'<path d="M5 4v16M11 7h9M11 12h9M11 17h9"/><circle cx="5" cy="4" r="1"/><circle cx="5" cy="20" r="1"/>',
+ notes:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+ search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/>',
+ backup:'<path d="M12 3v12m-4-4 4 4 4-4"/><path d="M4 16v4h16v-4"/>',
+ edit:'<path d="m4 20 4-.8L20 7l-3-3L5 16zM14 7l3 3"/>',
+ restore:'<path d="M4 11a8 8 0 1 1 3 7M4 5v6h6"/>',
+ chevron:'<path d="m9 6 6 6-6 6"/>',
+ left:'<path d="m15 5-7 7 7 7"/>',
+ right:'<path d="m9 5 7 7-7 7"/>',
+ close:'<path d="M5 5l14 14M19 5 5 19"/>',
+ activity:'<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+ drive:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h.01M11 15h.01"/>',
+ info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>'
+};
+function kbIcon(name){
+ const ns='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(ns,'svg');
+ svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');
+ svg.setAttribute('stroke-width','1.7');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');
+ svg.setAttribute('aria-hidden','true');svg.classList.add('kb-icon');
+ svg.innerHTML=KB_ICONS[name]||KB_ICONS.file;
+ return svg;
+}
+function kbLabelIcon(target,name){if(target&&!target.querySelector('.kb-icon'))target.prepend(kbIcon(name))}
+function kbDecorate(){
+ const pairs=[['kb-refresh-all','refresh'],['kb-files-heading','folder'],['kb-tables-heading','database'],['kb-memory-heading','notes'],['db-backup','backup'],['db-refresh','refresh'],['db-trash','trash'],['db-save','plus'],['db-cancel','close'],['kb-show-records','rows'],['kb-show-fields','schema'],['kb-prev','left'],['kb-next','right']];
+ for(const [id,name] of pairs)kbLabelIcon(document.getElementById(id),name);
+ for(const [i,name] of ['notes','drive','table','folder'].entries())kbLabelIcon(document.querySelectorAll('.kb-metric')[i],name);
+}
+kbDecorate();
 
 const $=id=>document.getElementById(id);
 let editId=null,trash=false;
@@ -190,18 +320,18 @@ async function refreshNotes(){
       const info=document.createElement('div');
       const name=document.createElement('strong');name.textContent=note.title;
       const summary=document.createElement('small');summary.textContent=(note.content||'').slice(0,120);
-      info.append(name,summary);row.append(info);
+      kbLabelIcon(name,'notes');info.append(name,summary);row.append(info);
       const controls=document.createElement('div');controls.className='db-tools';
       const button=document.createElement('button');button.type='button';
       button.textContent=trash?'Восстановить':'Изменить';
       button.onclick=async()=>{
         if(trash){await api('/api/notes/'+note.id+'/restore','POST');message('Заметка восстановлена');await refreshNotes();return}
         editId=note.id;$('db-title').value=note.title;$('db-content').value=note.content;$('db-cancel').hidden=false;$('db-title').focus();
-      };controls.append(button);
+      };kbLabelIcon(button,trash?'restore':'edit');controls.append(button);
       if(!trash){
         const del=document.createElement('button');del.type='button';del.textContent='В корзину';
         del.onclick=async()=>{await api('/api/notes/'+note.id,'DELETE');await refreshNotes()};
-        controls.append(del);
+        kbLabelIcon(del,'trash');controls.append(del);
       }
       row.append(controls);root.append(row);
     }
@@ -226,7 +356,7 @@ refreshNotes();
   const layer=document.getElementById('kb-layer'),win=document.getElementById('kb-window');
   const open=document.getElementById('kb-open'),close=document.getElementById('kb-close'),handle=document.getElementById('kb-handle');
   let previous=null,drag=null;
-  function show(){previous=document.activeElement;layer.hidden=false;win.focus()}
+  function show(){previous=document.activeElement;layer.hidden=false;win.focus();refreshNotes()}
   function hide(){layer.hidden=true;drag=null;if(previous&&previous.focus)previous.focus()}
   open.addEventListener('click',show);
   close.addEventListener('click',hide);
@@ -276,7 +406,8 @@ refreshNotes();
    const full=path?path+'/'+node.name:node.name;
    const row=document.createElement('button');row.type='button';row.className='kb-node';row.style.paddingLeft=(6+depth*13)+'px';
    const folder=node.type==='directory';
-   row.append(text('span',folder?(state.expanded.has(full)?'▾':'▸'):'◇','kb-glyph'),text('span',node.name,'kb-node-name'),text('span',size(node.bytes),'kb-size'));
+   const symbol=document.createElement('span');symbol.className='kb-glyph';symbol.append(kbIcon(folder?'folder':/\\.(js|ts|py|html|css|json)$/i.test(node.name)?'code':'file'));
+   row.append(symbol,text('span',node.name,'kb-node-name'),text('span',size(node.bytes),'kb-size'));
    row.onclick=()=>{
     host.querySelectorAll('[aria-selected]').forEach(x=>x.removeAttribute('aria-selected'));row.setAttribute('aria-selected','true');
     if(folder){state.expanded.has(full)?state.expanded.delete(full):state.expanded.add(full);drawTree()}
@@ -294,11 +425,13 @@ refreshNotes();
   const body=document.createElement('tbody');
   for(const row of rows){const tr=document.createElement('tr');for(const col of columns){const cell=text('td',row[col]);cell.title=String(row[col]??'');tr.append(cell)}body.append(tr)}
   table.append(body);
-  if(!rows.length){const empty=text('div','Нет записей','kb-empty');el('kb-page-label').textContent='0 записей';table.after(empty);setTimeout(()=>empty.remove(),2500)}
+  if(!rows.length){const tr=document.createElement('tr'),td=text('td','Нет записей');td.colSpan=Math.max(columns.length,1);tr.append(td);body.append(tr)}
  }
  async function renderTable(){
   const t=state.tables.find(x=>x.name===state.selected);if(!t)return;
   el('kb-selected-table').textContent=t.name+' · '+t.count+' строк';
+  el('kb-show-records').setAttribute('aria-pressed',String(state.view==='records'));
+  el('kb-show-fields').setAttribute('aria-pressed',String(state.view==='fields'));
   el('kb-prev').disabled=state.offset===0||state.view==='fields';
   el('kb-next').disabled=state.offset+30>=t.count||state.view==='fields';
   if(state.view==='fields'){
@@ -312,7 +445,7 @@ refreshNotes();
   const host=el('kb-tables');host.replaceChildren();
   for(const t of state.tables){
    const b=document.createElement('button');b.type='button';b.className='kb-table-choice';b.setAttribute('aria-pressed',String(t.name===state.selected));
-   b.append(text('strong',t.name),text('span',t.count+' строк · '+t.fields.length+' полей'));
+   b.append(kbIcon('table'),text('strong',t.name),text('span',t.count+' строк · '+t.fields.length+' полей'));
    b.onclick=()=>{state.selected=t.name;state.offset=0;state.view='records';drawTables();renderTable().catch(error)};
    host.append(b);
   }
@@ -334,6 +467,7 @@ refreshNotes();
   }catch(e){error(e)}
  }
  el('kb-open').addEventListener('click',load);
+ el('kb-refresh-all').addEventListener('click',()=>{load();refreshNotes()});
  el('kb-show-records').onclick=()=>{state.view='records';renderTable().catch(error)};
  el('kb-show-fields').onclick=()=>{state.view='fields';renderTable().catch(error)};
  el('kb-prev').onclick=()=>{state.offset=Math.max(0,state.offset-30);renderTable().catch(error)};
