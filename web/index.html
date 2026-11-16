@@ -210,6 +210,25 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
 .kb-code-focus .kb-line-number{background:#263728}
 .kb-line-body{white-space:pre}
 .kb-syn-keyword{color:#a9baff}.kb-syn-string{color:#b9dc9d}.kb-syn-comment{color:#7d9589}.kb-syn-number{color:#f0bb86}
+
+/* Minimal workspace: notes and files first, advanced data on demand */
+.kb-studio{background:#0e1111;padding:clamp(14px,2.5vw,24px)}
+.kb-topline{margin-bottom:16px}.kb-intro-title h2{font-size:clamp(24px,3vw,31px);letter-spacing:-1px}
+.kb-intro-title p{line-height:1.5}.kb-eyebrow{letter-spacing:.09em}
+.kb-workspace{grid-template-columns:minmax(240px,36%) minmax(0,1fr);gap:12px}
+.kb-project-rail,.kb-memory-section{background:#151a19;border-color:#2c3530}
+.kb-project-rail{position:static}.kb-main-stack{min-width:0}
+.kb-global-search{margin-bottom:14px}
+.kb-advanced{margin-top:14px;border:1px solid #303a33;border-radius:12px;background:#141a17;overflow:hidden}
+.kb-advanced>summary{cursor:pointer;padding:16px 18px;font-size:13px;font-weight:650;color:#dcebd8;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.kb-advanced>summary::-webkit-details-marker{display:none}
+.kb-advanced>summary::before{content:'+';font-size:18px;color:#a8d99a;margin-right:8px}
+.kb-advanced[open]>summary::before{content:'−'}
+.kb-advanced>summary span{font-size:11px;font-weight:400;color:#82958a}
+.kb-advanced-body{padding:0 12px 12px}
+.kb-advanced .kb-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kb-advanced .kb-data-section{margin-top:12px}
+@media(max-width:760px){.kb-workspace{grid-template-columns:minmax(0,1fr)}.kb-advanced .kb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.kb-advanced>summary{align-items:flex-start;flex-wrap:wrap}}
 </style>
 </head>
 <body>
@@ -238,36 +257,23 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
     </div>
     <div class="kb-content kb-studio">
       <div class="kb-topline">
-        <div class="kb-intro-title"><span class="kb-eyebrow">MIYORA / LOCAL INTELLIGENCE</span><h2>Центр знаний<span class="kb-accent">.</span></h2><p>Файлы, данные и память проекта — в одном пространстве.</p></div>
+        <div class="kb-intro-title"><span class="kb-eyebrow">MIYORA / WORKSPACE</span><h2>База знаний</h2><p>Заметки, файлы и поиск. Ничего лишнего.</p></div>
         <button type="button" class="kb-refresh-all" id="kb-refresh-all" aria-label="Обновить базу знаний">↻ <span>Обновить</span></button>
       </div>
       <section class="kb-global-search" aria-label="Глобальный поиск">
         <div class="kb-search-field"><input id="kb-global-query" type="search" placeholder="Поиск по файлам, коду и заметкам…" aria-label="Глобальный поиск" autocomplete="off"><button id="kb-global-submit" type="button">Найти</button></div>
         <div class="kb-search-results" id="kb-search-results" aria-live="polite" hidden></div>
       </section>
-      <div class="kb-metrics" aria-label="Состояние проекта">
-        <div class="kb-metric"><span>ЗАПИСИ</span><strong id="kb-count">—</strong><small>В памяти проекта</small></div>
-        <div class="kb-metric"><span>ХРАНИЛИЩЕ</span><strong id="kb-dbsize">—</strong><small>SQLite / WAL / SHM</small></div>
-        <div class="kb-metric"><span>ТАБЛИЦЫ</span><strong id="kb-tablecount">—</strong><small>Структура данных</small></div>
-        <div class="kb-metric"><span>ПРОЕКТ</span><strong id="kb-projectsize">—</strong><small>Файлы и каталоги</small></div>
-      </div>
       <div class="kb-workspace">
         <aside class="kb-project-rail" aria-labelledby="kb-files-heading">
-          <div class="kb-section-head"><div><span class="kb-eyebrow">01 / EXPLORER</span><h3 id="kb-files-heading">Структура проекта</h3></div><span class="kb-muted" id="kb-filecount">…</span></div>
+          <div class="kb-section-head"><div><span class="kb-eyebrow">ФАЙЛЫ</span><h3 id="kb-files-heading">Структура проекта</h3></div><span class="kb-muted" id="kb-filecount">…</span></div>
           <div class="kb-tree" id="kb-tree" aria-label="Файлы и каталоги"></div>
-          <div class="kb-file-inspector" id="kb-file-detail"><span class="kb-eyebrow">INSPECTOR</span><strong>Объект не выбран</strong><p>Выберите файл для просмотра содержимого.</p></div>
+          <div class="kb-file-inspector" id="kb-file-detail"><span class="kb-eyebrow">ПРОСМОТР</span><strong>Объект не выбран</strong><p>Выберите файл для просмотра содержимого.</p></div>
           <div class="kb-preview" id="kb-preview" hidden><div class="kb-preview-header"><strong id="kb-preview-name">Файл</strong><span id="kb-preview-meta"></span></div><pre class="kb-code" id="kb-preview-code" tabindex="0"></pre></div>
         </aside>
         <div class="kb-main-stack">
-          <section class="kb-data-section" aria-labelledby="kb-tables-heading">
-            <div class="kb-section-head"><div><span class="kb-eyebrow">02 / DATABASE</span><h3 id="kb-tables-heading">Данные SQLite</h3></div><span class="kb-live">● READ ONLY</span></div>
-            <div class="kb-tables" id="kb-tables"></div>
-            <div class="kb-dataset-bar"><div><span class="kb-eyebrow">DATASET</span><strong id="kb-selected-table">Выберите таблицу</strong></div><div class="kb-mode-switch"><button id="kb-show-records" type="button" aria-pressed="true">Записи</button><button id="kb-show-fields" type="button" aria-pressed="false">Структура</button></div></div>
-            <div class="kb-table-scroll"><table class="kb-data-table" id="kb-data-table"></table></div>
-            <div class="kb-toolbar kb-pagination"><span class="kb-muted" id="kb-page-label"></span><div><button id="kb-prev" type="button">←</button><button id="kb-next" type="button">→</button></div></div>
-          </section>
           <section class="kb-memory-section db-panel" aria-labelledby="kb-memory-heading">
-            <div class="kb-section-head"><div><span class="kb-eyebrow">03 / MEMORY</span><h3 id="kb-memory-heading">Память проекта</h3></div><button type="button" id="db-backup" class="kb-backup">Резервная копия ↗</button></div>
+            <div class="kb-section-head"><div><span class="kb-eyebrow">ЗАМЕТКИ</span><h3 id="kb-memory-heading">Память проекта</h3></div><button type="button" id="db-backup" class="kb-backup">Резервная копия ↗</button></div>
             <div class="kb-memory-controls"><input id="db-search" type="search" placeholder="Поиск по памяти…" aria-label="Поиск заметок"><button id="db-refresh" type="button">↻</button><button id="db-trash" type="button">Корзина</button></div>
             <form id="db-form" class="kb-note-editor">
               <input id="db-title" maxlength="200" required placeholder="Заголовок новой записи">
@@ -279,9 +285,23 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
           </section>
         </div>
       </div>
+      <details class="kb-advanced" id="kb-advanced"><summary>Дополнительно <span>SQLite · состояние · резервные копии</span></summary><div class="kb-advanced-body">      <div class="kb-metrics" aria-label="Состояние проекта">
+        <div class="kb-metric"><span>ЗАПИСИ</span><strong id="kb-count">—</strong><small>В памяти проекта</small></div>
+        <div class="kb-metric"><span>ХРАНИЛИЩЕ</span><strong id="kb-dbsize">—</strong><small>SQLite / WAL / SHM</small></div>
+        <div class="kb-metric"><span>ТАБЛИЦЫ</span><strong id="kb-tablecount">—</strong><small>Структура данных</small></div>
+        <div class="kb-metric"><span>ПРОЕКТ</span><strong id="kb-projectsize">—</strong><small>Файлы и каталоги</small></div>
+      </div>
+          <section class="kb-data-section" aria-labelledby="kb-tables-heading">
+            <div class="kb-section-head"><div><span class="kb-eyebrow">ДАННЫЕ</span><h3 id="kb-tables-heading">Данные SQLite</h3></div><span class="kb-live">● READ ONLY</span></div>
+            <div class="kb-tables" id="kb-tables"></div>
+            <div class="kb-dataset-bar"><div><span class="kb-eyebrow">DATASET</span><strong id="kb-selected-table">Выберите таблицу</strong></div><div class="kb-mode-switch"><button id="kb-show-records" type="button" aria-pressed="true">Записи</button><button id="kb-show-fields" type="button" aria-pressed="false">Структура</button></div></div>
+            <div class="kb-table-scroll"><table class="kb-data-table" id="kb-data-table"></table></div>
+            <div class="kb-toolbar kb-pagination"><span class="kb-muted" id="kb-page-label"></span><div><button id="kb-prev" type="button">←</button><button id="kb-next" type="button">→</button></div></div>
+          </section>
+</div></details>
       <p class="kb-muted" id="kb-error" role="status"></p>
     </div>
-    <div class="kb-foot"><span>MIYORA / KNOWLEDGE</span><span>Перетащите заголовок · Измените размер ↘</span></div>
+    <div class="kb-foot"><span>MIYORA</span><span>Локально · Только на вашем устройстве</span></div>
   </section>
 </div>
 <script>
