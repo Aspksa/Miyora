@@ -120,7 +120,23 @@ class MiyoraHandler(BaseHTTPRequestHandler):
         self.send_bytes(status, json.dumps(data, ensure_ascii=False).encode("utf-8"),
                         "application/json; charset=utf-8")
 
+    def _trusted_write(self) -> bool:
+        host = self.headers.get("Host", "")
+        allowed = {"127.0.0.1", "localhost"}
+        if host.split(":")[0].lower() not in allowed:
+            self.send_json(403, {"error": "invalid_host"})
+            return False
+        origin = self.headers.get("Origin")
+        if origin:
+            parsed = urlsplit(origin)
+            if parsed.scheme != "http" or parsed.hostname not in allowed or parsed.netloc != host:
+                self.send_json(403, {"error": "invalid_origin"})
+                return False
+        return True
+
     def do_POST(self) -> None:
+        if not self._trusted_write():
+            return
         if urlsplit(self.path).path == "/api/db/backup":
             try:
                 self.send_json(201, {"backup": str(database.backup())})
@@ -154,6 +170,8 @@ class MiyoraHandler(BaseHTTPRequestHandler):
             self.send_json(503, {"error": "database_unavailable"})
 
     def do_PUT(self) -> None:
+        if not self._trusted_write():
+            return
         route = urlsplit(self.path).path
         if not route.startswith("/api/notes/"):
             self.send_json(404, {"error": "not_found"})
@@ -172,6 +190,8 @@ class MiyoraHandler(BaseHTTPRequestHandler):
             self.send_json(400, {"error": "invalid_request"})
 
     def do_DELETE(self) -> None:
+        if not self._trusted_write():
+            return
         route = urlsplit(self.path).path
         if not route.startswith("/api/notes/"):
             self.send_json(404, {"error": "not_found"})
