@@ -34,6 +34,17 @@ class MiyoraTests(unittest.TestCase):
         cls.thread.join(timeout=5)
         cls.temp.cleanup()
 
+    def test_doctor_closes_sqlite_before_cleanup(self):
+        import doctor
+        import io
+        from contextlib import redirect_stdout
+        output = io.StringIO()
+        with redirect_stdout(output):
+            code = doctor.run()
+        result = json.loads(output.getvalue())
+        self.assertEqual(code, 0, result)
+        self.assertTrue(result["checks"]["sqlite:write_read"])
+
     def test_modular_structure(self):
         import database
         import main
