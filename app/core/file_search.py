@@ -22,7 +22,7 @@ class InvalidFile(ValueError):
     pass
 
 def _path(root: Path, relative: str) -> Path:
-    if not isinstance(relative, str) or not relative or len(relative) > 1000 or "\\x00" in relative:
+    if not isinstance(relative, str) or not relative or len(relative) > 1000 or "\x00" in relative:
         raise InvalidFile("invalid_path")
     candidate = Path(relative.replace("\\", "/"))
     if candidate.is_absolute() or any(part in ("..", ".") for part in candidate.parts):
@@ -54,11 +54,11 @@ def preview(root: Path, relative: str) -> dict:
         content = path.read_text(encoding="utf-8-sig")
     except (UnicodeError, OSError):
         raise InvalidFile("unreadable_file") from None
-    if "\\x00" in content:
+    if "\x00" in content:
         raise InvalidFile("binary_file")
     return {"path": path.relative_to(root.resolve()).as_posix(), "name": path.name,
             "extension": path.suffix.lower(), "content": content,
-            "lines": content.count("\\n") + 1, "bytes": path.stat().st_size}
+            "lines": content.count("\n") + 1, "bytes": path.stat().st_size}
 
 def search(root: Path, query: str, limit: int = 50) -> dict:
     if not isinstance(query, str) or not 2 <= len(query.strip()) <= 120:
@@ -119,7 +119,7 @@ def search(root: Path, query: str, limit: int = 50) -> dict:
                 content = path.read_text(encoding="utf-8-sig")
             except (OSError, UnicodeError):
                 continue
-            if "\\x00" in content:
+            if "\x00" in content:
                 continue
             relative = path.relative_to(root).as_posix()
             if needle in path.name.casefold():
