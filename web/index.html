@@ -269,6 +269,22 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
 .home-status[data-state=checking] .home-status-dot{background:#d4bc7e}
 @media(max-width:1020px){.home-status-copy strong{display:none}.home-status{padding:8px}.home-status>svg{width:20px;height:20px}}
 @media(max-width:600px){.home-statuses{gap:5px}.home-status-copy{display:none}.home-status{padding:8px 6px;gap:5px}}
+
+/* One baseline and consistent control geometry across the header. */
+header .right{gap:9px;min-width:0}
+header .right>.kb-launch,header .right>.settings-launch,header .right .home-status{height:42px;min-height:42px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;border-radius:12px;box-sizing:border-box}
+header .right>.kb-launch,header .right>.settings-launch{padding:0 13px;gap:9px;white-space:nowrap}
+header .right>.kb-launch svg,header .right>.settings-launch svg,header .right .home-status>svg{width:20px;height:20px;flex:0 0 20px}
+header .right .home-statuses{gap:9px;align-items:center}
+header .right .home-status{padding:0 11px;justify-content:flex-start;gap:9px}
+header .right .home-status-copy{gap:2px}
+header .right .home-status-copy strong{font-size:11px;line-height:13px}
+header .right .home-status-copy small{font-size:10px;line-height:12px}
+header .right .home-status-dot{margin-left:2px}
+@media(max-width:1120px){header .right{gap:7px}header .right .home-statuses{gap:7px}header .right>.kb-launch,header .right>.settings-launch{padding:0 10px}header .right .home-status{padding:0 9px}}
+@media(max-width:880px){header .right .home-status-copy strong{display:block}header .right .home-status-copy small{display:none}header .right .home-status{gap:7px}}
+@media(max-width:690px){header .right>.kb-launch,header .right>.settings-launch{width:42px;padding:0}header .right>.kb-launch span,header .right>.settings-launch span{display:none}header .right .home-status{width:42px;padding:0;gap:4px;justify-content:center}header .right .home-status-copy{display:none}header .right .home-status-dot{width:6px;height:6px;margin-left:0}}
+@media(max-width:390px){header{padding-left:12px;padding-right:12px}.brand{gap:7px;font-size:16px}.mark{width:28px;height:28px}header .right{gap:5px}header .right .home-statuses{gap:5px}header .right>.kb-launch,header .right>.settings-launch,header .right .home-status{width:36px;height:38px;min-height:38px}header .right .home-status>svg,header .right>.kb-launch svg,header .right>.settings-launch svg{width:18px;height:18px;flex-basis:18px}}
 </style>
 </head>
 <body>

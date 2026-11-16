@@ -329,6 +329,14 @@ class MiyoraTests(unittest.TestCase):
         finally:
             cloudru.clear_key()
 
+    def test_header_controls_share_geometry(self):
+        with urlopen(self.base + "/") as response:
+            page = response.read().decode("utf-8")
+        self.assertIn("One baseline and consistent control geometry across the header.", page)
+        self.assertIn("height:42px;min-height:42px", page)
+        self.assertIn("header .right .home-status", page)
+        self.assertIn("@media(max-width:690px)", page)
+
     def test_home_status_icons(self):
         with urlopen(self.base + "/") as response:
             page = response.read().decode("utf-8")
