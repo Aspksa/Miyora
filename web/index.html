@@ -229,13 +229,36 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
 .kb-advanced .kb-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
 .kb-advanced .kb-data-section{margin-top:12px}
 @media(max-width:760px){.kb-workspace{grid-template-columns:minmax(0,1fr)}.kb-advanced .kb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.kb-advanced>summary{align-items:flex-start;flex-wrap:wrap}}
+
+.settings-launch{display:inline-flex;align-items:center;gap:8px;padding:10px 13px;border:1px solid #353c37;border-radius:12px;background:#1a211e;color:#e2ebdf;cursor:pointer;font:inherit;font-size:12px}
+.settings-launch svg{width:19px;height:19px}.settings-launch:hover{border-color:#a5d59b}
+.settings-layer[hidden]{display:none}.settings-layer{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:16px}
+.settings-shade{position:absolute;inset:0;background:#000b}
+.settings-dialog{position:relative;width:min(520px,100%);max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #354139;border-radius:18px;background:#111715;box-shadow:0 25px 100px #000b;color:#e6eee4}
+.settings-heading{display:flex;justify-content:space-between;align-items:start;gap:12px;padding:23px 24px;border-bottom:1px solid #2c3730}
+.settings-heading h2{font-size:25px;margin:0 0 5px}.settings-heading p{margin:0;color:#90a194;font-size:12px}
+.settings-close{width:34px;height:34px;border:1px solid #37443b;border-radius:9px;background:#1e2922;color:#e6eee4;font-size:22px;cursor:pointer}
+.cloudru-form{padding:24px;display:flex;flex-direction:column;gap:10px}
+.cloudru-provider{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #35443a;border-radius:12px;background:#1b2920;margin-bottom:8px}
+.cloudru-provider-icon{font-size:24px;color:#b6e7a1}.cloudru-provider strong{display:block;font-size:15px}.cloudru-provider small{display:block;color:#95ab9a;font-size:11px;margin-top:4px}
+.cloudru-form label{font-size:12px;font-weight:650;margin-top:8px}
+.cloudru-form input,.cloudru-form select{width:100%;min-width:0;padding:11px 12px;border:1px solid #3a4940;border-radius:9px;background:#0d1310;color:#e7f2e6;font:inherit;font-size:12px}
+.cloudru-form input:focus-visible,.cloudru-form select:focus-visible,.cloudru-form button:focus-visible,.settings-launch:focus-visible{outline:2px solid #b4e6a3;outline-offset:2px}
+.cloudru-form input[readonly]{color:#9ab2a1}
+.cloudru-form small,.cloudru-help{font-size:11px;color:#8fa393;line-height:1.6}
+.cloudru-model-row{display:flex;gap:8px}.cloudru-model-row select{flex:1}
+.cloudru-form button{border:1px solid #425749;border-radius:9px;padding:10px 13px;background:#233329;color:#e4f3df;font:inherit;font-size:12px;cursor:pointer}
+.cloudru-form button:hover{background:#304735}.cloudru-actions{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+#cloudru-save{background:#b7e4a4;color:#172417;font-weight:700}
+#cloudru-message{min-height:18px;margin:0;font-size:12px;color:#b4dca9}
+@media(max-width:650px){header .right{gap:7px}.settings-launch span{display:none}.settings-launch{padding:9px}.cloudru-model-row{flex-wrap:wrap}.cloudru-model-row button{width:100%}.cloudru-form,.settings-heading{padding:17px}}
 </style>
 </head>
 <body>
 <div class="shell">
 <header>
   <div class="brand"><span class="mark" aria-hidden="true">M</span><span>Miyora</span></div>
-  <div class="right"><button type="button" class="kb-launch" id="kb-open" aria-haspopup="dialog" aria-controls="kb-layer"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5.5C9.4 3.8 6.5 3.8 3 5v13.5c3.5-1.2 6.4-1.2 9 0.5 2.6-1.7 5.5-1.7 9-.5V5c-3.5-1.2-6.4-1.2-9 .5Z"/><path d="M12 5.5V19"/><path d="m16.5 9 1 1 2-2"/></svg><span>База знаний</span></button><span class="indicator" id="indicator" aria-hidden="true"></span><span id="status">Локальный режим</span></div>
+  <div class="right"><button type="button" class="kb-launch" id="kb-open" aria-haspopup="dialog" aria-controls="kb-layer"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5.5C9.4 3.8 6.5 3.8 3 5v13.5c3.5-1.2 6.4-1.2 9 0.5 2.6-1.7 5.5-1.7 9-.5V5c-3.5-1.2-6.4-1.2-9 .5Z"/><path d="M12 5.5V19"/><path d="m16.5 9 1 1 2-2"/></svg><span>База знаний</span></button><button type="button" class="settings-launch" id="settings-open" aria-haspopup="dialog" aria-controls="settings-layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.9l-1.8 1.8a1.7 1.7 0 0 0-1.9-.34l-1.1.45-.3 2.1h-2.6l-.3-2.1-1.1-.45a1.7 1.7 0 0 0-1.9.34l-1.8-1.8A1.7 1.7 0 0 0 7.3 15l-.45-1.1-2.1-.3v-2.6l2.1-.3.45-1.1a1.7 1.7 0 0 0-.34-1.9l1.8-1.8a1.7 1.7 0 0 0 1.9.34l1.1-.45.3-2.1h2.6l.3 2.1 1.1.45a1.7 1.7 0 0 0 1.9-.34l1.8 1.8a1.7 1.7 0 0 0-.34 1.9l.45 1.1 2.1.3v2.6l-2.1.3z"/></svg><span>Настройки</span></button><span class="indicator" id="indicator" aria-hidden="true"></span><span id="status">Локальный режим</span></div>
 </header>
 <main>
   <div class="center">
@@ -247,6 +270,21 @@ footer{padding:24px clamp(24px,5vw,80px);display:flex;justify-content:space-betw
   </div>
 </main>
 <footer><span>© Miyora</span><span>Версия 0.2 · Локальное приложение</span></footer>
+</div>
+<div id="settings-layer" class="settings-layer" hidden>
+  <div class="settings-shade" id="settings-shade"></div>
+  <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
+    <div class="settings-heading"><div><span class="kb-eyebrow">MIYORA / INTEGRATIONS</span><h2 id="settings-title">Настройки</h2><p>Подключение AI-провайдера</p></div><button type="button" id="settings-close" class="settings-close" aria-label="Закрыть настройки">×</button></div>
+    <form id="cloudru-form" class="cloudru-form">
+      <div class="cloudru-provider"><span class="cloudru-provider-icon">☁</span><div><strong>Cloud.ru</strong><small>Evolution Foundation Models · OpenAI-совместимый API</small></div></div>
+      <label for="cloudru-url">Адрес API</label><input id="cloudru-url" value="https://foundation-models.api.cloud.ru/v1" readonly>
+      <label for="cloudru-key">API-ключ</label><input id="cloudru-key" type="password" placeholder="Вставьте Key Secret" autocomplete="new-password" spellcheck="false"><small id="cloudru-key-status">Ключ ещё не сохранён</small>
+      <label for="cloudru-model">Модель</label><div class="cloudru-model-row"><select id="cloudru-model"><option value="">Сначала загрузите модели</option></select><button type="button" id="cloudru-load-models">Обновить список</button></div>
+      <p class="cloudru-help">Ключ сохраняется на устройстве. В Windows защищён DPAPI. В браузер после сохранения не возвращается. Для получения списка моделей используется API Cloud.ru.</p>
+      <div class="cloudru-actions"><button type="button" id="cloudru-clear">Удалить ключ</button><button type="submit" id="cloudru-save">Сохранить</button></div>
+      <p id="cloudru-message" role="status" aria-live="polite"></p>
+    </form>
+  </section>
 </div>
 <div id="kb-layer" class="kb-layer" hidden>
   <div class="kb-shade" id="kb-shade"></div>
@@ -581,6 +619,50 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  el('kb-show-fields').onclick=()=>{state.view='fields';renderTable().catch(error)};
  el('kb-prev').onclick=()=>{state.offset=Math.max(0,state.offset-30);renderTable().catch(error)};
  el('kb-next').onclick=()=>{state.offset+=30;renderTable().catch(error)};
+})();
+
+(function(){
+ const $=id=>document.getElementById(id);
+ const layer=$('settings-layer'),dialog=layer.querySelector('.settings-dialog'),msg=$('cloudru-message');
+ let previous=null;
+ function status(text){msg.textContent=text}
+ function selectModels(models,selected){
+  const select=$('cloudru-model');select.replaceChildren();
+  const values=[...new Set([selected,...models].filter(Boolean))];
+  if(!values.length){const option=new Option('Загрузите список моделей','');select.add(option)}
+  for(const value of values)select.add(new Option(value,value));
+  select.value=selected||values[0]||'';
+ }
+ async function request(url,body){
+  const response=await fetch(url,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await response.json();if(!response.ok)throw Error(data.error||'HTTP '+response.status);return data;
+ }
+ async function refresh(){
+  const data=await request('/api/settings/cloudru');
+  $('cloudru-key-status').textContent=data.has_key?'Ключ сохранён · '+data.key_storage:'Ключ не сохранён';
+  selectModels([],data.model);return data;
+ }
+ async function show(){previous=document.activeElement;layer.hidden=false;dialog.focus();status('');try{await refresh()}catch(error){status('Ошибка: '+error.message)}}
+ function hide(){layer.hidden=true;$('cloudru-key').value='';if(previous&&previous.focus)previous.focus()}
+ $('settings-open').onclick=show;$('settings-close').onclick=hide;$('settings-shade').onclick=hide;
+ document.addEventListener('keydown',event=>{if(!layer.hidden&&event.key==='Escape'){event.preventDefault();hide()}});
+ $('cloudru-form').onsubmit=async event=>{
+  event.preventDefault();const key=$('cloudru-key').value.trim(),model=$('cloudru-model').value;
+  try{await request('/api/settings/cloudru',{...(key?{api_key:key}:{}),model});$('cloudru-key').value='';await refresh();status('Настройки сохранены')}
+  catch(error){status('Ошибка сохранения: '+error.message)}
+ };
+ $('cloudru-load-models').onclick=async()=>{
+  status('Загружаем модели Cloud.ru…');
+  try{
+   const key=$('cloudru-key').value.trim();
+   if(key){await request('/api/settings/cloudru',{api_key:key});$('cloudru-key').value=''}
+   const selected=$('cloudru-model').value,data=await request('/api/settings/cloudru/models');
+   selectModels(data.models,selected&&data.models.includes(selected)?selected:'');
+   await refreshKeyStatus();status('Загружено моделей: '+data.models.length+'. Выберите модель и сохраните.')
+  }catch(error){status('Ошибка подключения: '+error.message)}
+ };
+ async function refreshKeyStatus(){const data=await request('/api/settings/cloudru');$('cloudru-key-status').textContent=data.has_key?'Ключ сохранён · '+data.key_storage:'Ключ не сохранён'}
+ $('cloudru-clear').onclick=async()=>{if(!confirm('Удалить сохранённый ключ Cloud.ru?'))return;try{await request('/api/settings/cloudru',{clear_key:true});$('cloudru-key').value='';await refresh();status('Ключ удалён')}catch(error){status('Ошибка: '+error.message)}};
 })();
 </script>
 </body>
