@@ -88,7 +88,7 @@ def settings() -> dict:
 def set_model(model: str) -> dict:
     if not isinstance(model, str) or len(model) > 200 or any(c in model for c in "\r\n\x00"):
         raise CloudError("invalid_model")
-    with database.connect() as db:
+    with closing(database.connect()) as db:
         db.execute("INSERT INTO settings(key,value) VALUES ('cloudru_model',?) "
                    "ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=CURRENT_TIMESTAMP",
                    (model,))
