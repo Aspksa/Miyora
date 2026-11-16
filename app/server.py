@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from app.core import database, explorer, file_search
+from app.core import database, explorer, file_search, cloudru
 import os
 import socket
 import sys
@@ -145,6 +145,16 @@ class MiyoraHandler(BaseHTTPRequestHandler):
                 self.send_json(400, {"error": "invalid_search"})
             except sqlite3.Error:
                 self.send_json(503, {"error": "database_unavailable"})
+        elif route == "/api/settings/cloudru":
+            try:
+                self.send_json(200, cloudru.settings())
+            except cloudru.CloudError as exc:
+                self.send_json(503, {"error": str(exc)})
+        elif route == "/api/settings/cloudru/models":
+            try:
+                self.send_json(200, cloudru.models())
+            except cloudru.CloudError as exc:
+                self.send_json(400, {"error": str(exc)})
         elif route == "/api/notes":
             try:
                 params = parse_qs(urlsplit(self.path).query)
@@ -174,6 +184,24 @@ class MiyoraHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         if not self._trusted_write():
+            return
+        if urlsplit(self.path).path == "/api/settings/cloudru":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                if not 0 < length <= 8192:
+                    raise ValueError("invalid_body_size")
+                body = json.loads(self.rfile.read(length).decode("utf-8"))
+                if not isinstance(body, dict) or set(body) - {"api_key", "model", "clear_key"}:
+                    raise ValueError("invalid_settings")
+                if body.get("clear_key") is True:
+                    cloudru.clear_key()
+                if "api_key" in body and body["api_key"]:
+                    cloudru.save_key(body["api_key"])
+                if "model" in body:
+                    cloudru.set_model(body["model"])
+                self.send_json(200, cloudru.settings())
+            except (ValueError, UnicodeError, json.JSONDecodeError, cloudru.CloudError):
+                self.send_json(400, {"error": "invalid_cloudru_settings"})
             return
         if urlsplit(self.path).path == "/api/db/backup":
             try:
