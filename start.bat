@@ -37,6 +37,7 @@ goto :failed
 echo [ERROR] Cannot access launcher directory.
 :failed
 echo.
+if defined CI exit /b 1
 echo [INFO] Press any key to close this window.
 pause
 exit /b 1
