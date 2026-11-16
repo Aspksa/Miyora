@@ -1003,7 +1003,7 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  let pointer=null,dragged=false,clock=0,mode='radial',activityStage='idle',lastRefresh=0,transition=null,hovered=null,rotation=0;
  const colors={user:'#6dcfc4',assistant:'#d6aa7b'};
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- // Adapted from Aspksa/Mizuyori mizuyori/static/brain.js: weighted ring sectors,
+ // Hierarchical rings: adapted from Aspksa/Mizuyori mizuyori/static/brain.js: weighted ring sectors,
  // matrix-like groups, axial hex clusters, circuit board and HUD track geometry.
  function sections(){
   const clusters=graph.clusters||[];
