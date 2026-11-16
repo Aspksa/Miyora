@@ -338,6 +338,22 @@ header .right .home-status-dot{margin-left:2px}
 .chat-disclaimer{text-align:center;color:#778075;font-size:10px;margin:9px 0 0}
 @media(max-width:850px){.chat-layout{grid-template-columns:180px minmax(0,1fr)}.chat-suggestions{grid-template-columns:1fr}.chat-suggestions button{min-height:48px}.chat-welcome{margin-top:45px}}
 @media(max-width:640px){.chat-layout{grid-template-columns:minmax(0,1fr)}.chat-sidebar{display:none}.chat-top{padding:0 17px}.chat-welcome{margin-top:45px}.chat-messages{padding:20px 15px}.chat-hint{font-size:9px}}
+
+.chat-history{display:flex;flex-direction:column;gap:3px;background:transparent;padding:0;margin:0;overflow:auto;white-space:normal}
+.chat-thread{display:flex;align-items:center;gap:4px;border-radius:9px;padding:3px}.chat-thread.active{background:#2b302a}
+.chat-thread>button:first-child{flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:transparent;border:0;color:#dce3d9;padding:8px;font:inherit;font-size:12px;cursor:pointer}
+.chat-thread-action{background:transparent;border:0;color:#aab3a8;padding:5px;cursor:pointer}
+.chat-message-text p{margin:0 0 12px}.chat-message-text p:last-child{margin-bottom:0}
+.chat-message-text h2,.chat-message-text h3{font-size:16px;line-height:1.4;margin:17px 0 8px}
+.chat-message-text ul,.chat-message-text ol{padding-left:24px;margin:8px 0 14px}.chat-message-text li{margin:4px 0}
+.chat-message-text pre{position:relative;overflow:auto;background:#101410;border:1px solid #394338;border-radius:11px;padding:38px 15px 14px;margin:14px 0;font-size:12px;line-height:1.6}
+.chat-message-text code{font-family:Consolas,monospace;background:#30372e;border-radius:4px;padding:1px 4px;font-size:.92em}
+.chat-message-text pre code{background:transparent;padding:0;color:#d9e4d0}
+.chat-copy-code{position:absolute;right:8px;top:7px;border:1px solid #455044;background:#2c352b;border-radius:6px;color:#d8e5d4;padding:5px 9px;font:inherit;font-size:10px;cursor:pointer}
+.chat-token-keyword{color:#b9a1eb}.chat-token-string{color:#b8d7a0}.chat-token-comment{color:#869b87}.chat-token-number{color:#e4ba85}
+.chat-message-text table{border-collapse:collapse;display:block;overflow:auto;max-width:100%;margin:12px 0}
+.chat-message-text td,.chat-message-text th{border:1px solid #424d40;padding:7px 10px;text-align:left}.chat-message-text th{background:#303a30}
+.chat-stop{background:#bca68d!important}
 </style>
 </head>
 <body>
@@ -811,45 +827,114 @@ el('kb-global-query').addEventListener('keydown',event=>{if(event.key==='Enter')
  $('cloudru-clear').onclick=async()=>{if(!confirm('Удалить сохранённый ключ Cloud.ru?'))return;try{await request('/api/settings/cloudru',{clear_key:true});$('cloudru-key').value='';await refresh();status('Ключ удалён')}catch(error){status('Ошибка: '+error.message)}};
 })();
 
+
 (function(){
- const $=id=>document.getElementById(id);
- const form=$('chat-form'),input=$('chat-input'),send=$('chat-send'),messages=$('chat-messages');
- let history=[],busy=false,session=0;
- const errorText={api_key_required:'Добавьте API-ключ Cloud.ru в настройках.',model_required:'Выберите модель Cloud.ru в настройках.',cloudru_auth_failed:'Ключ Cloud.ru отклонён. Проверьте настройки.',cloudru_unavailable:'Cloud.ru сейчас недоступен. Попробуйте позже.',invalid_chat_response:'Модель вернула неожиданный ответ.'};
- function render(role,content,isError=false){
+ const $=id=>document.getElementById(id),input=$('chat-input'),send=$('chat-send'),host=$('chat-messages');
+ let threads=[],threadId=null,history=[],controller=null,sequence=0;
+ const errors={api_key_required:'Добавьте API-ключ Cloud.ru в настройках.',model_required:'Выберите модель в настройках.',cloudru_auth_failed:'Ключ Cloud.ru отклонён.',cloudru_unavailable:'Cloud.ru недоступен.'};
+ async function api(path,method='GET',body){
+  const response=await fetch(path,{method,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+  const data=await response.json();if(!response.ok)throw Error(data.error||'HTTP '+response.status);return data;
+ }
+ function inline(parent,text){
+  const pattern=/(`[^`\n]+`|\*\*[^*\n]+\*\*|\*[^*\n]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;let pos=0;
+  for(const match of text.matchAll(pattern)){
+   parent.append(document.createTextNode(text.slice(pos,match.index)));
+   const value=match[0];let node;
+   if(value[0]==='`'){node=document.createElement('code');node.textContent=value.slice(1,-1)}
+   else if(value.startsWith('**')){node=document.createElement('strong');node.textContent=value.slice(2,-2)}
+   else if(value[0]==='*'){node=document.createElement('em');node.textContent=value.slice(1,-1)}
+   else{const m=value.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);node=document.createElement('a');node.href=m[2];node.textContent=m[1];node.target='_blank';node.rel='noopener noreferrer'}
+   parent.append(node);pos=match.index+value.length;
+  }
+  parent.append(document.createTextNode(text.slice(pos)));
+ }
+ function renderMarkdown(target,source){
+  target.replaceChildren();const lines=source.split('\n');let i=0;
+  while(i<lines.length){
+   const line=lines[i];
+   if(line.startsWith('```')){
+    const lang=line.slice(3).trim().slice(0,24);i++;const codeLines=[];
+    while(i<lines.length&&!lines[i].startsWith('```'))codeLines.push(lines[i++]);if(i<lines.length)i++;
+    const pre=document.createElement('pre'),code=document.createElement('code'),copy=document.createElement('button');copy.type='button';copy.className='chat-copy-code';copy.textContent='Копировать';
+    const raw=codeLines.join('\n');copy.onclick=()=>navigator.clipboard.writeText(raw).then(()=>{copy.textContent='Скопировано'}).catch(()=>{copy.textContent='Ошибка'});
+    if(lang)code.setAttribute('data-language',lang);
+    const token=/("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#[^\n]*|\/\/[^\n]*|\b(?:const|let|var|function|return|class|def|import|from|async|await|if|else|for|while|True|False|None|true|false|null)\b|\b\d+\b)/g;
+    let pos=0;for(const m of raw.matchAll(token)){code.append(document.createTextNode(raw.slice(pos,m.index)));const span=document.createElement('span');span.className=m[0].startsWith('#')||m[0].startsWith('//')?'chat-token-comment':/^[\x22\x27]/.test(m[0])?'chat-token-string':/^\d/.test(m[0])?'chat-token-number':'chat-token-keyword';span.textContent=m[0];code.append(span);pos=m.index+m[0].length}code.append(document.createTextNode(raw.slice(pos)));
+    pre.append(copy,code);target.append(pre);continue;
+   }
+   if(/^\|.*\|$/.test(line)&&i+1<lines.length&&/^\|[\s:|\-]+\|$/.test(lines[i+1])){
+    const table=document.createElement('table'),head=document.createElement('tr');line.slice(1,-1).split('|').forEach(v=>{const th=document.createElement('th');inline(th,v.trim());head.append(th)});table.append(head);i+=2;
+    while(i<lines.length&&/^\|.*\|$/.test(lines[i])){const tr=document.createElement('tr');lines[i].slice(1,-1).split('|').forEach(v=>{const td=document.createElement('td');inline(td,v.trim());tr.append(td)});table.append(tr);i++}target.append(table);continue;
+   }
+   const heading=line.match(/^(#{1,3})\s+(.+)$/);
+   if(heading){const h=document.createElement(heading[1].length===1?'h2':'h3');inline(h,heading[2]);target.append(h);i++;continue}
+   const bullet=line.match(/^\s*([-*]|\d+\.)\s+(.+)$/);
+   if(bullet){const list=document.createElement(/^\d/.test(bullet[1])?'ol':'ul');
+    while(i<lines.length){const m=lines[i].match(/^\s*([-*]|\d+\.)\s+(.+)$/);if(!m)break;const li=document.createElement('li');inline(li,m[2]);list.append(li);i++}target.append(list);continue}
+   if(!line.trim()){i++;continue}
+   const p=document.createElement('p'),parts=[];while(i<lines.length&&lines[i].trim()&&!/^(#{1,3}\s|\x60\x60\x60|\s*[-*] |\s*\d+\. )/.test(lines[i]))parts.push(lines[i++]);
+   if(!parts.length){parts.push(lines[i++])}inline(p,parts.join('\n'));target.append(p);
+  }
+ }
+ function addMessage(role,content){
   const item=document.createElement('article');item.className='chat-message';item.dataset.role=role;
-  if(role==='assistant'){const avatar=document.createElement('span');avatar.className='chat-avatar';avatar.textContent='✳';avatar.setAttribute('aria-hidden','true');item.append(avatar)}
+  if(role==='assistant'){const avatar=document.createElement('span');avatar.className='chat-avatar';avatar.textContent='✳';item.append(avatar)}
   const bubble=document.createElement('div');bubble.className='chat-bubble';
   if(role==='assistant'){const label=document.createElement('span');label.className='chat-message-label';label.textContent='Miyora';bubble.append(label)}
-  const text=document.createElement('div');text.className='chat-message-text';if(isError)text.classList.add('chat-error');text.textContent=content;bubble.append(text);item.append(bubble);messages.append(item);
-  $('chat-scroll').scrollTop=$('chat-scroll').scrollHeight;return text;
+  const body=document.createElement('div');body.className='chat-message-text';bubble.append(body);item.append(bubble);host.append(item);
+  renderMarkdown(body,content);$('chat-scroll').scrollTop=$('chat-scroll').scrollHeight;return body;
  }
- async function refreshModel(){
-  try{const r=await fetch('/api/settings/cloudru',{cache:'no-store'});if(!r.ok)return;const data=await r.json();$('chat-model').textContent=data.model||'Модель не выбрана'}catch{}
+ function drawThreads(){
+  const list=$('chat-history');list.replaceChildren();
+  for(const t of threads){
+   const row=document.createElement('div');row.className='chat-thread'+(t.id===threadId?' active':'');
+   const open=document.createElement('button');open.textContent=t.title;open.onclick=()=>select(t.id);
+   const rename=document.createElement('button');rename.className='chat-thread-action';rename.textContent='✎';rename.title='Переименовать';rename.onclick=async()=>{const title=prompt('Название диалога',t.title);if(title===null)return;try{await api('/api/chats/'+t.id,'PUT',{title});await loadThreads()}catch(e){alert(e.message)}};
+   const remove=document.createElement('button');remove.className='chat-thread-action';remove.textContent='×';remove.title='Удалить';remove.onclick=async()=>{if(!confirm('Удалить диалог?'))return;try{await api('/api/chats/'+t.id,'DELETE');if(threadId===t.id)reset();await loadThreads()}catch(e){alert(e.message)}};
+   row.append(open,rename,remove);list.append(row);
+  }
+ }
+ async function loadThreads(){const data=await api('/api/chats');threads=data.threads;drawThreads()}
+ function stop(){if(controller){controller.abort();controller=null}send.classList.remove('chat-stop');send.title='Отправить';send.setAttribute('aria-label','Отправить сообщение');input.disabled=false}
+ function reset(){sequence++;stop();threadId=null;history=[];host.replaceChildren();$('chat-welcome').hidden=false;input.value='';drawThreads()}
+ async function select(id){
+  sequence++;stop();threadId=id;history=[];host.replaceChildren();$('chat-welcome').hidden=true;drawThreads();
+  try{const data=await api('/api/chats/'+id);if(threadId!==id)return;history=data.messages.map(m=>({role:m.role,content:m.content}));history.forEach(m=>addMessage(m.role,m.content))}
+  catch(e){addMessage('assistant','Не удалось открыть диалог: '+e.message)}
  }
  async function submit(){
-  const value=input.value.trim();if(!value||busy)return;
-  busy=true;send.disabled=true;input.disabled=true;$('chat-welcome').hidden=true;
-  input.value='';history.push({role:'user',content:value});
-  if(history.length===1)$('chat-history').textContent=value.slice(0,42);
-  render('user',value);const placeholder=render('assistant','Думаю…');
-  const active=session;
+  const value=input.value.trim();if(!value||controller)return;
+  const active=++sequence;controller=new AbortController();const signal=controller.signal;
+  input.value='';input.disabled=true;send.classList.add('chat-stop');send.title='Остановить';send.setAttribute('aria-label','Остановить генерацию');
+  $('chat-welcome').hidden=true;
   try{
-   const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history.slice(-30)})});
-   const data=await response.json();
-   if(!response.ok)throw Error(data.error||'Ошибка HTTP '+response.status);
-   if(active!==session)return;
-   placeholder.textContent=data.message||'Пустой ответ';
-   history.push({role:'assistant',content:data.message||''});
-   $('chat-model').textContent=data.model||$('chat-model').textContent;
-  }catch(error){if(active===session){placeholder.textContent=errorText[error.message]||'Не удалось получить ответ: '+error.message;placeholder.classList.add('chat-error');history.pop()}}
-  finally{if(active===session){busy=false;send.disabled=false;input.disabled=false;input.focus()}}
+   if(!threadId){const t=await api('/api/chats','POST',{title:value.slice(0,80)});threadId=t.id;await loadThreads()}
+   history.push({role:'user',content:value});addMessage('user',value);
+   const output=addMessage('assistant','Думаю…');let answer='',finished=false,buffer='';
+   const response=await fetch('/api/chats/'+threadId+'/stream',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history.slice(-30)})});
+   if(!response.ok){const err=await response.json();throw Error(err.error||'HTTP '+response.status)}
+   const reader=response.body.getReader(),decoder=new TextDecoder();
+   while(!finished){
+    const chunk=await reader.read();if(chunk.done)break;buffer+=decoder.decode(chunk.value,{stream:true});
+    let boundary;while((boundary=buffer.indexOf('\n\n'))!==-1){
+     const frame=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);
+     for(const line of frame.split('\n')){if(!line.startsWith('data: '))continue;const data=line.slice(6);if(data==='[DONE]'){finished=true;break}
+      const event=JSON.parse(data);if(event.error)throw Error(event.error);
+      if(event.delta){answer+=event.delta;renderMarkdown(output,answer);$('chat-scroll').scrollTop=$('chat-scroll').scrollHeight}
+     }
+    }
+   }
+   if(active===sequence){if(answer)history.push({role:'assistant',content:answer});else renderMarkdown(output,'Ответ пуст.');await loadThreads()}
+  }catch(e){if(active===sequence){const last=host.lastElementChild?.querySelector('.chat-message-text');if(last)renderMarkdown(last,signal.aborted?'Генерация остановлена.':errors[e.message]||'Ошибка: '+e.message);history.pop();await loadThreads().catch(()=>{})}}
+  finally{if(active===sequence){stop();input.focus()}}
  }
- form.addEventListener('submit',event=>{event.preventDefault();submit()});
- input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();submit()}});
- $('chat-new').addEventListener('click',()=>{session++;history=[];busy=false;messages.replaceChildren();$('chat-welcome').hidden=false;$('chat-history').textContent='Новый диалог';input.disabled=false;send.disabled=false;input.value='';input.focus();refreshModel()});
- document.querySelectorAll('[data-prompt]').forEach(button=>button.addEventListener('click',()=>{input.value=button.dataset.prompt;input.focus()}));
- refreshModel();
+ $('chat-form').addEventListener('submit',e=>{e.preventDefault();if(controller){stop()}else submit()});
+ input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();submit()}});
+ $('chat-new').onclick=()=>{reset();input.focus()};
+ document.querySelectorAll('[data-prompt]').forEach(b=>b.onclick=()=>{input.value=b.dataset.prompt;input.focus()});
+ api('/api/settings/cloudru').then(s=>{$('chat-model').textContent=s.model||'Модель не выбрана'}).catch(()=>{});
+ loadThreads().catch(e=>{const label=document.createElement('span');label.textContent='История недоступна: '+e.message;$('chat-history').append(label)});
 })();
 </script>
 </body>

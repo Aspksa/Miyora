@@ -386,6 +386,57 @@ class MiyoraTests(unittest.TestCase):
             cloudru.clear_key()
             cloudru.set_model("")
 
+    def test_persistent_chat_store(self):
+        from app.core import chat_store
+        chat_store.initialize()
+        thread=chat_store.create_thread("Test chat")
+        self.assertIn(thread["id"],[t["id"] for t in chat_store.list_threads()])
+        chat_store.append(thread["id"],"user","Question")
+        chat_store.append(thread["id"],"assistant","Answer")
+        self.assertEqual([m["content"] for m in chat_store.messages(thread["id"])],["Question","Answer"])
+        self.assertTrue(chat_store.rename(thread["id"],"Renamed"))
+        self.assertTrue(chat_store.delete(thread["id"]))
+        self.assertIsNone(chat_store.messages(thread["id"]))
+
+    def test_chat_history_api(self):
+        def request(path,method="GET",body=None):
+            req=Request(self.base+path,method=method,
+                        data=json.dumps(body).encode() if body is not None else None,
+                        headers={"Content-Type":"application/json"})
+            with urlopen(req) as response: return json.load(response)
+        created=request("/api/chats","POST",{"title":"API test"})
+        thread_id=created["id"]
+        self.assertTrue(any(t["id"]==thread_id for t in request("/api/chats")["threads"]))
+        self.assertEqual(request("/api/chats/"+str(thread_id))["messages"],[])
+        self.assertTrue(request("/api/chats/"+str(thread_id),"PUT",{"title":"Updated"})["updated"])
+        self.assertTrue(request("/api/chats/"+str(thread_id),"DELETE")["deleted"])
+
+    def test_streaming_provider(self):
+        from app.core import cloudru,chat
+        cloudru.save_key("test-stream-key")
+        cloudru.set_model("stream-model")
+        class FakeResponse:
+            def __enter__(self): return self
+            def __exit__(self,*args): return False
+            def __iter__(self):
+                return iter([b'data: {"choices":[{"delta":{"content":"Hi"}}]}\n',
+                             b'data: {"choices":[{"delta":{"content":"!"}}]}\n',
+                             b'data: [DONE]\n'])
+        try:
+            with patch.object(chat,"urlopen",return_value=FakeResponse()) as mocked:
+                self.assertEqual("".join(chat.stream([{"role":"user","content":"Hello"}])),"Hi!")
+                self.assertTrue(json.loads(mocked.call_args.args[0].data)["stream"])
+        finally:
+            cloudru.clear_key()
+            cloudru.set_model("")
+
+    def test_chat_markdown_ui(self):
+        with urlopen(self.base+"/") as response:
+            page=response.read().decode()
+        for marker in ("renderMarkdown(", "chat-copy-code", "chat-token-keyword",
+                       "chat-thread-action", "getReader()", "Остановить генерацию"):
+            self.assertIn(marker,page)
+
     def test_homepage(self):
         with urlopen(self.base + "/") as response:
             self.assertIn(b"Miyora", response.read())
