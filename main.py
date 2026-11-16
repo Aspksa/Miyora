@@ -8,6 +8,7 @@ import database
 import os
 import socket
 import sys
+import webbrowser
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -122,6 +123,7 @@ def main() -> int:
             print(f"[INFO] Project: {ROOT}", flush=True)
             print(f"[INFO] Open: http://{HOST}:{actual_port}/", flush=True)
             print("[INFO] Stop: Ctrl+C", flush=True)
+            webbrowser.open(f"http://{HOST}:{actual_port}/")
             try:
                 server.serve_forever(poll_interval=0.3)
             except KeyboardInterrupt:
