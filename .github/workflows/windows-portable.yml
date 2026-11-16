@@ -10,6 +10,9 @@ on:
       - 'index.html'
       - 'web/**'
       - 'tests/**'
+      - 'doctor.py'
+      - 'start.bat'
+      - 'launcher.ps1'
       - '.github/workflows/windows-portable.yml'
 jobs:
   build:
@@ -21,6 +24,20 @@ jobs:
           python-version: '3.13'
       - name: Run tests
         run: python -m unittest discover -s tests -v
+      - name: Exercise BAT and portable Python in Unicode path
+        shell: pwsh
+        run: |
+          $target = Join-Path $env:RUNNER_TEMP 'Miyora тест (spaces)'
+          New-Item -ItemType Directory -Force -Path $target | Out-Null
+          Copy-Item start.bat,launcher.ps1,main.py,database.py,doctor.py -Destination $target
+          Copy-Item app,web -Destination $target -Recurse
+          Push-Location $target
+          try {
+            & cmd.exe /d /c 'call start.bat --doctor'
+            if ($LASTEXITCODE -ne 0) { throw 'Portable Python BAT doctor failed' }
+            & cmd.exe /d /c 'call start.bat --doctor'
+            if ($LASTEXITCODE -ne 0) { throw 'Second offline BAT doctor failed' }
+          } finally { Pop-Location }
       - name: Install PyInstaller
         run: python -m pip install pyinstaller
       - name: Build portable executable
